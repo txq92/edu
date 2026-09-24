@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @font-face {
+        font-family: "DeskSerif";
+        src: url("./fonts/LiberationSerif-Regular.ttf") format("truetype");
+        font-weight: 400;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: "DeskSerif";
+        src: url("./fonts/LiberationSerif-Italic.ttf") format("truetype");
+        font-weight: 400;
+        font-style: italic;
+      }
+      @font-face {
+        font-family: "DeskSans";
+        src: url("./fonts/DejaVuSans.ttf") format("truetype");
+        font-weight: 400;
+        font-style: normal;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        background: #0c0d0f;
+      }
+      .frame {
+        position: relative;
+        width: 1200px;
+        height: 630px;
+        background: radial-gradient(
+          ellipse 78% 68% at 50% 46%,
+          #151619 0%,
+          #0c0d0f 74%
+        );
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .kicker {
+        font-family: DeskSans, sans-serif;
+        font-size: 11px;
+        letter-spacing: 0.46em;
+        color: #d8d4cc;
+        opacity: 0.52;
+        text-transform: uppercase;
+        margin-bottom: 22px;
+      }
+      .rule {
+        width: 40px;
+        height: 1px;
+        background: #d8d4cc;
+        opacity: 0.3;
+        margin-bottom: 26px;
+      }
+      .title {
+        font-family: DeskSerif, serif;
+        font-size: 76px;
+        font-weight: 400;
+        color: #eceae4;
+        letter-spacing: 0.012em;
+        line-height: 1;
+        font-kerning: normal;
+      }
+      .subtitle {
+        font-family: DeskSerif, serif;
+        font-style: italic;
+        font-size: 23px;
+        color: #d8d4cc;
+        letter-spacing: 0.18em;
+        margin-top: 16px;
+      }
+      .mark {
+        margin-top: 44px;
+        display: flex;
+        align-items: flex-end;
+        gap: 32px;
+        height: 112px;
+      }
+      .candle {
+        width: 28px;
+        height: 112px;
+        position: relative;
+      }
+      .candle .wick {
+        position: absolute;
+        left: 13px;
+        width: 2px;
+        background: currentColor;
+        opacity: 0.88;
+      }
+      .candle .body {
+        position: absolute;
+        left: 4px;
+        width: 20px;
+        box-shadow: inset 1px 0 0 rgba(236, 234, 228, 0.14);
+      }
+      .bull {
+        color: #3d9a6a;
+      }
+      .bull .wick {
+        top: 0;
+        height: 112px;
+        background: #3d9a6a;
+      }
+      .bull .body {
+        top: 18px;
+        height: 68px;
+        background: #3d9a6a;
+      }
+      .bear {
+        color: #c45c5c;
+      }
+      .bear .wick {
+        top: 26px;
+        height: 86px;
+        background: #c45c5c;
+      }
+      .bear .body {
+        top: 44px;
+        height: 42px;
+        background: #c45c5c;
+      }
+      .grain {
+        position: absolute;
+        inset: 0;
+        background-image: url("./grain.png");
+        background-size: 1200px 630px;
+        opacity: 0.055;
+        mix-blend-mode: overlay;
+        pointer-events: none;
+      }
+      .vignette {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          ellipse 70% 62% at 50% 48%,
+          transparent 42%,
+          rgba(12, 13, 15, 0.55) 100%
+        );
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="frame">
+      <div class="kicker">Private Trading Desk</div>
+      <div class="rule"></div>
+      <div class="title">Nukida Desk</div>
+      <div class="subtitle">Luật Bò Gấu</div>
+      <div class="mark" aria-hidden="true">
+        <div class="candle bull">
+          <div class="wick"></div>
+          <div class="body"></div>
+        </div>
+        <div class="candle bear">
+          <div class="wick"></div>
+          <div class="body"></div>
+        </div>
+      </div>
+      <div class="grain"></div>
+      <div class="vignette"></div>
+    </div>
+  </body>
+</html>

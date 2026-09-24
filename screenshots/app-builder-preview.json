@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Nukida Desk",
+      "hasCanvas": false,
+      "bodyTextLen": 425,
+      "bodyTextHash": "bd4867252f48b09995ea3d4b687e6d139c6416ce07ab596d567df5fad14e975d",
+      "bodyTextPrefix": "Nukida Desk Luật Bò Gấu Desk Nhật ký Luật Cài đặt BTC — Đang đọc",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Nukida Desk",
+      "hasCanvas": false,
+      "bodyTextLen": 413,
+      "bodyTextHash": "3a9a953115d42c8e5113dfc774b31af62a1fc7f0085a0f9e6cfe4a01faf87e54",
+      "bodyTextPrefix": "Nukida Desk BTC — Đang đọc cấu trúc… PAPER Tài khoản giấy $1,000",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}
