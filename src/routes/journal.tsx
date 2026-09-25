@@ -16,11 +16,10 @@ function JournalPage() {
   const setSymbol = useSettings((s) => s.setSymbol);
   const navigate = useNavigate();
 
-  const rows = [...positions, ...history];
+  const rows = [...positions, ...history].sort((a, b) => b.openedAt - a.openedAt);
   const stats = summarize(rows, tickers);
 
   function exportText() {
-    const rows = [...positions, ...history];
     const text = rows
       .map((p) => {
         const j = p.journal;

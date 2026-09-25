@@ -106,6 +106,7 @@ export function PriceChart({
         borderColor: "#2a2c30",
         timeVisible: true,
         secondsVisible: false,
+        shiftVisibleRangeOnNewBar: false,
         tickMarkFormatter: (time: Time, type: TickMarkType) => {
           const p = vnParts(time);
           if (!p) return "";
@@ -174,9 +175,16 @@ export function PriceChart({
     const timeScale = chart.timeScale();
     const priceScale = chart.priceScale("right");
     const keepZoom = fittedKey.current === resetKey;
-    const timeRange = keepZoom ? timeScale.getVisibleRange() : null;
     const logical = keepZoom ? timeScale.getVisibleLogicalRange() : null;
-    const priceRange = keepZoom && !priceScale.options().autoScale ? priceScale.getVisibleRange() : null;
+    const priceRange = keepZoom ? priceScale.getVisibleRange() : null;
+    const last = candles[candles.length - 1];
+    if (last) {
+      const abs = Math.abs(last.c);
+      const precision = abs >= 1000 ? 2 : abs >= 100 ? 3 : abs >= 1 ? 4 : abs >= 0.01 ? 6 : 8;
+      series.applyOptions({
+        priceFormat: { type: "price", precision, minMove: 10 ** -precision },
+      });
+    }
 
     series.setData(barsOf(candles));
     volumeRef.current?.setData(
@@ -225,20 +233,13 @@ export function PriceChart({
     }
 
     if (!keepZoom) {
+      priceScale.setAutoScale(true);
       timeScale.fitContent();
       fittedKey.current = resetKey;
       return;
     }
-    if (timeRange) {
-      try {
-        timeScale.setVisibleRange(timeRange);
-      } catch {
-        if (logical) timeScale.setVisibleLogicalRange(logical);
-      }
-    } else if (logical) {
-      timeScale.setVisibleLogicalRange(logical);
-    }
-    if (priceRange) {
+    if (logical) timeScale.setVisibleLogicalRange(logical);
+    if (priceRange && priceRange.from !== priceRange.to) {
       priceScale.setAutoScale(false);
       priceScale.setVisibleRange(priceRange);
     }

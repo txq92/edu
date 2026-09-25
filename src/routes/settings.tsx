@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { formatUsd } from "@/lib/nukida/format";
 import { geoBlocked, testConnection } from "@/lib/binance/live";
+import { telegramFindChat, telegramSend } from "@/lib/telegram/api";
 import { usePaper } from "@/lib/store/paper";
 import { useSession } from "@/lib/store/session";
 import { useSettings } from "@/lib/store/settings";
@@ -39,6 +40,30 @@ function SettingsPage() {
       toast.success("Kết nối Binance Futures OK.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Lỗi kết nối");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function linkTelegram() {
+    if (!s.tgToken) {
+      toast.error("Nhập token bot trước.");
+      return;
+    }
+    setBusy(true);
+    try {
+      let chatId = s.tgChatId;
+      if (!chatId) {
+        const found = await telegramFindChat({ data: { token: s.tgToken } });
+        chatId = found.chatId;
+        s.patch({ tgChatId: chatId });
+      }
+      await telegramSend({
+        data: { token: s.tgToken, chatId, text: "Mèo Đen đã nối. Tín hiệu LONG/SHORT sẽ gửi vào đây." },
+      });
+      toast.success("Telegram đã nhận tin thử.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Không nối được Telegram.");
     } finally {
       setBusy(false);
     }
@@ -138,6 +163,39 @@ function SettingsPage() {
           </label>
           <Button variant="outline" onClick={() => void ping()} disabled={busy}>
             {busy ? "Đang thử…" : "Thử kết nối"}
+          </Button>
+        </div>
+      </section>
+
+      <section className="mt-4 rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
+        <h2 className="font-display text-2xl">Telegram</h2>
+        <p className="mt-1 text-xs text-muted">
+          Tạo bot với @BotFather, dán token. Mở bot, gửi /start, rồi bấm thử. Chat id tự điền nếu ô đang trống.
+        </p>
+        <div className="mt-4 grid gap-3">
+          <Field label="Token bot">
+            <Input
+              type="password"
+              value={s.tgToken}
+              autoComplete="off"
+              placeholder="123456:ABC..."
+              onChange={(e) => s.patch({ tgToken: e.target.value.trim() })}
+            />
+          </Field>
+          <Field label="Chat id">
+            <Input
+              value={s.tgChatId}
+              autoComplete="off"
+              placeholder="Tự lấy sau /start"
+              onChange={(e) => s.patch({ tgChatId: e.target.value.trim() })}
+            />
+          </Field>
+          <label className="flex min-h-11 items-center justify-between gap-3 text-sm">
+            Báo khi có tín hiệu
+            <Switch checked={s.tgAlerts} onCheckedChange={(v) => s.patch({ tgAlerts: v })} />
+          </label>
+          <Button variant="outline" onClick={() => void linkTelegram()} disabled={busy}>
+            {busy ? "Đang thử…" : "Gửi tin thử"}
           </Button>
         </div>
       </section>

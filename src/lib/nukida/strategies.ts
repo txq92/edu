@@ -59,12 +59,34 @@ function htfAllows(pack: MarketPack, side: Side): { ok: boolean; trend: "up" | "
   const h1 = readStructure(closedOnly(pack.tfH1.length ? pack.tfH1 : pack.tf15));
   const trend = h4.trend === "side" ? h1.trend : h4.trend;
   if (side === "BUY" && trend === "down") {
-    return { ok: false, trend, note: "Khung xương đang giảm — không mua." };
+    return { ok: false, trend, note: "Khung lớn H4/H1 đang giảm — không mua." };
   }
   if (side === "SELL" && trend === "up") {
-    return { ok: false, trend, note: "Khung xương đang tăng — không bán." };
+    return { ok: false, trend, note: "Khung lớn H4/H1 đang tăng — không bán." };
   }
-  return { ok: true, trend, note: h4.note };
+  return { ok: true, trend, note: h4.trend === "side" ? h1.note : h4.note };
+}
+
+export function higherTrend(pack: MarketPack): "up" | "down" | "side" {
+  return htfAllows(pack, "BUY").trend;
+}
+
+export function frameZones(pack: MarketPack): Zone[] {
+  const tag = (candles: Candle[], tf: string) =>
+    detectZones(closedOnly(candles)).map((z) => ({
+      ...z,
+      label: `${z.kind === "bull" ? "Vùng Bò" : "Vùng Gấu"} ${tf}`,
+    }));
+  return [...tag(pack.tfH4, "H4"), ...tag(pack.tfH1, "H1")];
+}
+
+export function zoneHit(pack: MarketPack, side: Side, price: number, sensitivity: number): Zone | null {
+  const trend = htfAllows(pack, side).trend;
+  const aligned = side === "BUY" ? trend === "up" : trend === "down";
+  if (!aligned) return null;
+  const kind = side === "BUY" ? "bull" : "bear";
+  const pad = 0.0015 * sensitivity;
+  return frameZones(pack).find((z) => z.kind === kind && inZone(price, z, pad)) ?? null;
 }
 
 export function scanBreakout(pack: MarketPack, rules: RuleConfig = DEFAULT_RULES): RawSetup | null {
@@ -238,25 +260,26 @@ function toSignal(pack: MarketPack, raw: RawSetup, rules: RuleConfig, qualityBoo
   const r2 = Math.max(2.5, r1 + 1);
   const { tp1, tp2 } = targets(raw.entry, sl, raw.side, r1, r2);
   const rr = rrOf(raw.entry, sl, tp1);
-  const zones = detectZones(tf15);
-  const struct = readStructure(tf15);
-  const zone = raw.zone ?? nearestZone(raw.entry, zones, raw.side === "BUY" ? "bull" : "bear");
+  const zones = frameZones(pack);
+  const struct = readStructure(closedOnly(pack.tfH4.length ? pack.tfH4 : pack.tfH1));
+  const hit = zoneHit(pack, raw.side, raw.entry, rules.sensitivity);
+  const zone = hit ?? nearestZone(raw.entry, zones, raw.side === "BUY" ? "bull" : "bear") ?? raw.zone;
   const tired = exhaustedMove(tf15, raw.side);
   const funding = nearFunding(pack.now ?? Date.now(), rules.fundingWindowMin);
-  const methodZone = raw.strategy === "ema" || raw.strategy === "vwap" || raw.strategy === "breakout";
-  const atZone = methodZone || (zone ? inZone(raw.entry, zone, 0.002 * rules.sensitivity) : false);
 
   const rejects = [...raw.rejects];
-  if (rules.requireHtf && !allow.ok) rejects.push(allow.note);
+  if (rules.requireHtf && allow.trend !== (raw.side === "BUY" ? "up" : "down")) {
+    rejects.push(allow.trend === "side" ? "Khung lớn H4/H1 chưa có hướng — đứng ngoài." : allow.note);
+  }
+  if (!hit) rejects.push("5m chưa về vùng Bò/Gấu của H1 hoặc H4 cùng chiều khung lớn.");
   if (rules.blockExhausted && tired) rejects.push("Sóng kéo dài, kiệt sức trên khung 15m.");
   if (rr + 0.02 < rules.minRr) rejects.push(`R:R ${rr.toFixed(2)} < ${rules.minRr} — bỏ.`);
   if (rules.fundingFilter && funding) rejects.push("Gần giờ funding — đứng ngoài.");
-  if (!atZone) rejects.push("Chưa đứng tại vùng Bò/Gấu chất lượng.");
 
   const requiredPass = rejects.length === 0;
-  let quality = raw.zone.quality + qualityBoost;
+  let quality = (hit?.quality ?? raw.zone.quality) + qualityBoost;
   if (allow.trend === (raw.side === "BUY" ? "up" : "down")) quality += 8;
-  if (atZone) quality += 6;
+  if (hit) quality += 6;
   if (!requiredPass) quality = Math.min(quality, rules.minQuality - 1);
   quality = Math.max(0, Math.min(100, quality));
 
@@ -273,7 +296,7 @@ function toSignal(pack: MarketPack, raw: RawSetup, rules: RuleConfig, qualityBoo
     rr,
     slPct: Math.abs(raw.entry - sl) / raw.entry,
     bias: struct.trend,
-    zone: zone ?? raw.zone,
+    zone,
     checklist: [],
     requiredPass,
     quality,
@@ -354,9 +377,9 @@ export function biasOf(pack: MarketPack): {
   const longBias = emaStack === "up" && vsVwap === "above" && sH.trend !== "down";
   const shortBias = emaStack === "down" && vsVwap === "below" && sH.trend !== "up";
   const note = longBias
-    ? "Bias 15m: chỉ long. Chờ hồi vùng Bò / EMA21 / VWAP."
+    ? "Khung lớn tăng. Chỉ long khi 5m về vùng Bò H1/H4."
     : shortBias
-      ? "Bias 15m: chỉ short. Chờ hồi vùng Gấu / EMA21 / VWAP."
-      : "Bias không sạch — ưu tiên đứng ngoài.";
+      ? "Khung lớn giảm. Chỉ short khi 5m về vùng Gấu H1/H4."
+      : "Khung lớn chưa cùng chiều vùng Bò/Gấu — đứng ngoài.";
   return { trend15: s15.trend, trendH4: sH.trend, emaStack, vsVwap, note };
 }

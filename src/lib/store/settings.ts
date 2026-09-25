@@ -20,6 +20,9 @@ type SettingsData = {
   testnet: boolean;
   apiKey: string;
   apiSecret: string;
+  tgToken: string;
+  tgChatId: string;
+  tgAlerts: boolean;
   consecutiveLossHalt: number;
 };
 
@@ -51,6 +54,9 @@ export const useSettings = create<Settings>()(
       testnet: false,
       apiKey: "",
       apiSecret: "",
+      tgToken: "",
+      tgChatId: "",
+      tgAlerts: true,
       consecutiveLossHalt: 3,
       setSymbol: (symbol) => set({ symbol }),
       addWatch: (id) => {

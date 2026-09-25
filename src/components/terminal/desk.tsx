@@ -28,7 +28,6 @@ export function Desk() {
   const books = useMarket((s) => s.books);
   const tickers = useMarket((s) => s.tickers);
   const signals = useMarket((s) => s.signals);
-  const loading = useMarket((s) => s.loading);
   const error = useMarket((s) => s.error);
   const replaySummary = useMarket((s) => s.replaySummary);
   const cash = usePaper((s) => s.cash);
@@ -136,8 +135,8 @@ export function Desk() {
             </div>
           </div>
           <div className="h-80 overflow-hidden rounded-md bg-raised lg:h-96">
-            {loading && candles.length === 0 ? (
-              <div className="flex h-full items-center justify-center text-sm text-muted">Đang kéo nến Binance…</div>
+            {candles.length === 0 ? (
+              <div className="flex h-full items-center justify-center text-sm text-muted">Đang kéo nến…</div>
             ) : (
               <PriceChart
                 candles={candles}

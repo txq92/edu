@@ -1,8 +1,8 @@
 import type { ChecklistItem, Side, Signal } from "./types";
 import type { MarketPack } from "./strategies";
-import { biasOf } from "./strategies";
+import { biasOf, frameZones, higherTrend, zoneHit } from "./strategies";
 import { closedOnly, nearFunding } from "./indicators";
-import { detectZones, exhaustedMove, inZone, readStructure } from "./structure";
+import { exhaustedMove, readStructure } from "./structure";
 import { DEFAULT_RULES, type RuleConfig } from "./rules";
 
 export function buildChecklist(signal: Signal, pack: MarketPack, rules: RuleConfig = DEFAULT_RULES): ChecklistItem[] {
@@ -10,25 +10,20 @@ export function buildChecklist(signal: Signal, pack: MarketPack, rules: RuleConf
   const buy = side === "BUY";
   const bias = biasOf(pack);
   const tf15 = closedOnly(pack.tf15);
-  const struct = readStructure(tf15);
-  const zones = detectZones(tf15);
+  const htf = readStructure(closedOnly(pack.tfH4.length ? pack.tfH4 : pack.tfH1));
   const tired = exhaustedMove(tf15, side);
   const funding = rules.fundingFilter && nearFunding(pack.now ?? Date.now(), rules.fundingWindowMin);
-  const methodZone = signal.strategy === "ema" || signal.strategy === "vwap" || signal.strategy === "breakout";
-  const atZone = methodZone || inZone(signal.entry, signal.zone, 0.002);
-  const opposing =
-    (buy && (bias.trendH4 === "down" || struct.trend === "down")) ||
-    (!buy && (bias.trendH4 === "up" || struct.trend === "up"));
+  const hit = zoneHit(pack, side, signal.entry, rules.sensitivity);
+  const trend = higherTrend(pack);
+  const aligned = buy ? trend === "up" : trend === "down";
 
   const items: ChecklistItem[] = [
     {
       id: "a1",
       group: "A",
       required: true,
-      label: buy
-        ? "Khung lớn đang uptrend hoặc sideway phản ứng từ vùng Bò"
-        : "Khung lớn đang downtrend hoặc sideway phản ứng từ vùng Gấu",
-      pass: !rules.requireHtf || !opposing,
+      label: buy ? "Khung lớn H4/H1 đang tăng, cùng chiều lệnh mua" : "Khung lớn H4/H1 đang giảm, cùng chiều lệnh bán",
+      pass: !rules.requireHtf || aligned,
       note: bias.note,
     },
     {
@@ -42,38 +37,38 @@ export function buildChecklist(signal: Signal, pack: MarketPack, rules: RuleConf
       id: "a3",
       group: "A",
       required: true,
-      label: buy ? "Không có cấu trúc giảm rõ trên khung xương" : "Không có cấu trúc tăng rõ trên khung xương",
-      pass: !rules.requireHtf || (buy ? bias.trendH4 !== "down" : bias.trendH4 !== "up"),
-      note: `H4/H1: ${bias.trendH4}`,
+      label: buy ? "Không có cấu trúc giảm rõ trên khung lớn" : "Không có cấu trúc tăng rõ trên khung lớn",
+      pass: !rules.requireHtf || aligned,
+      note: `H4/H1: ${trend}`,
     },
     {
       id: "b1",
       group: "B",
       required: true,
-      label: buy ? "Giá đang tại vùng Bò chất lượng" : "Giá đang tại vùng Gấu chất lượng",
-      pass: atZone,
-      note: signal.zone.label,
+      label: buy ? "Giá 5m đang tại vùng Bò của H1 hoặc H4" : "Giá 5m đang tại vùng Gấu của H1 hoặc H4",
+      pass: Boolean(hit),
+      note: hit?.label ?? "Chưa chạm vùng khung lớn",
     },
     {
       id: "b2",
       group: "B",
       required: true,
-      label: "Vùng trùng HL/LH hoặc mép hộp / EMA / VWAP",
-      pass: Boolean(signal.zone),
+      label: "Vùng lấy từ H1 hoặc H4, không phải vùng giữa",
+      pass: Boolean(hit),
     },
     {
       id: "b3",
       group: "B",
       required: true,
-      label: "Vùng chưa bị phá vỡ rõ",
-      pass: !struct.broken,
+      label: "Vùng khung lớn chưa bị phá vỡ rõ",
+      pass: !htf.broken,
     },
     {
       id: "b4",
       group: "B",
       required: true,
       label: "Không phải vùng giữa nowhere",
-      pass: atZone,
+      pass: Boolean(hit),
     },
     {
       id: "c1",
@@ -130,7 +125,7 @@ export function buildChecklist(signal: Signal, pack: MarketPack, rules: RuleConf
       group: "E",
       required: false,
       label: "Hội tụ đa khung / đa setup",
-      pass: signal.strategy === "confluence" || zones.length > 0,
+      pass: signal.strategy === "confluence" || frameZones(pack).length > 0,
     },
     {
       id: "e2",
@@ -175,25 +170,19 @@ export function idleChecklist(pack: MarketPack, side: Side, rules: RuleConfig = 
   const buy = side === "BUY";
   const bias = biasOf(pack);
   const tf15 = closedOnly(pack.tf15);
-  const struct = readStructure(tf15);
-  const zones = detectZones(tf15);
+  const htf = readStructure(closedOnly(pack.tfH4.length ? pack.tfH4 : pack.tfH1));
   const tired = exhaustedMove(tf15, side);
   const funding = rules.fundingFilter && nearFunding(pack.now ?? Date.now(), rules.fundingWindowMin);
-  const opposing =
-    (buy && (bias.trendH4 === "down" || struct.trend === "down")) ||
-    (!buy && (bias.trendH4 === "up" || struct.trend === "up"));
-  const kind = buy ? "bull" : "bear";
-  const zone = zones.find((z) => z.kind === kind);
+  const trend = higherTrend(pack);
+  const aligned = buy ? trend === "up" : trend === "down";
 
   const items: ChecklistItem[] = [
     {
       id: "a1",
       group: "A",
       required: true,
-      label: buy
-        ? "Khung lớn đang uptrend hoặc sideway phản ứng từ vùng Bò"
-        : "Khung lớn đang downtrend hoặc sideway phản ứng từ vùng Gấu",
-      pass: !rules.requireHtf || !opposing,
+      label: buy ? "Khung lớn H4/H1 đang tăng, cùng chiều lệnh mua" : "Khung lớn H4/H1 đang giảm, cùng chiều lệnh bán",
+      pass: !rules.requireHtf || aligned,
       note: bias.note,
     },
     {
@@ -207,32 +196,31 @@ export function idleChecklist(pack: MarketPack, side: Side, rules: RuleConfig = 
       id: "a3",
       group: "A",
       required: true,
-      label: buy ? "Không có cấu trúc giảm rõ trên khung xương" : "Không có cấu trúc tăng rõ trên khung xương",
-      pass: !rules.requireHtf || (buy ? bias.trendH4 !== "down" : bias.trendH4 !== "up"),
-      note: `H4/H1: ${bias.trendH4}`,
+      label: buy ? "Không có cấu trúc giảm rõ trên khung lớn" : "Không có cấu trúc tăng rõ trên khung lớn",
+      pass: !rules.requireHtf || aligned,
+      note: `H4/H1: ${trend}`,
     },
     {
       id: "b1",
       group: "B",
       required: true,
-      label: buy ? "Giá đang tại vùng Bò chất lượng" : "Giá đang tại vùng Gấu chất lượng",
+      label: buy ? "Giá 5m đang tại vùng Bò của H1 hoặc H4" : "Giá 5m đang tại vùng Gấu của H1 hoặc H4",
       pass: false,
-      note: zone ? `${zone.label} — chưa có nến vào` : "Chưa có vùng",
+      note: "Chưa có nến 5 phút vào vùng khung lớn",
     },
     {
       id: "b2",
       group: "B",
       required: true,
-      label: "Vùng trùng HL/LH hoặc mép hộp / EMA / VWAP",
-      pass: Boolean(zone),
-      note: zone?.label,
+      label: "Vùng lấy từ H1 hoặc H4, không phải vùng giữa",
+      pass: false,
     },
     {
       id: "b3",
       group: "B",
       required: true,
-      label: "Vùng chưa bị phá vỡ rõ",
-      pass: !struct.broken,
+      label: "Vùng khung lớn chưa bị phá vỡ rõ",
+      pass: !htf.broken,
     },
     {
       id: "b4",
@@ -299,7 +287,7 @@ export function idleChecklist(pack: MarketPack, side: Side, rules: RuleConfig = 
       group: "E",
       required: false,
       label: "Hội tụ đa khung / đa setup",
-      pass: zones.length > 0,
+      pass: frameZones(pack).length > 0,
     },
     {
       id: "e2",

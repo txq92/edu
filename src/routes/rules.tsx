@@ -21,17 +21,15 @@ const BLOCKS = [
   {
     title: "Ba lớp vào lệnh",
     items: [
-      "Breakout + retest: phá hộp 15m kèm lực, chờ 5m retest mép hộp. Không đuổi nến phá đầu tiên.",
-      "Pullback EMA 9/21: 15m EMA9 xếp trên/dưới EMA21, hồi về EMA21, 5m đảo chiều giữ EMA.",
-      "VWAP phiên: chỉ long trên VWAP, chỉ short dưới VWAP. Hồi chạm rồi giữ. Tránh giờ funding.",
-      "Hội tụ: 15m EMA + VWAP cùng hướng, vùng trùng nhau, 5m nến giữ — xác suất sạch hơn.",
+      "Chỉ vào khi giá 5 phút chạm vùng Bò hoặc Gấu của H1/H4 và cùng chiều khung lớn.",
+      "Breakout, EMA, VWAP chỉ là tín hiệu xác nhận trên 5 phút, không đủ để vào nếu chưa về vùng khung lớn.",
     ],
   },
   {
     title: "Vùng Bò Gấu",
     items: [
-      "Vùng Bò: đáy cấu trúc hoặc nơi phe mua từng đẩy mạnh — càng gần khung xương càng mạnh.",
-      "Vùng Gấu: đỉnh cấu trúc hoặc nơi phe bán từng đạp mạnh.",
+      "Vùng Bò và Vùng Gấu lấy trên H1 và H4, không lấy trên 15 phút.",
+      "Long chỉ khi khung lớn tăng và giá 5 phút về vùng Bò. Short chỉ khi khung lớn giảm và giá 5 phút về vùng Gấu.",
       "Loại vùng giữa trend, vùng xuyên nhiều lần, vùng nhỏ ngược sóng mẹ.",
     ],
   },
@@ -160,12 +158,9 @@ function RulesPage() {
               />
             </label>
           ) : null}
-          <Toggle
-            label="Auto paper cả watchlist"
-            hint="Không chỉ coin đang mở. Mỗi vòng quét tối đa một lệnh giấy."
-            checked={rules.autoAllWatch}
-            onChange={(v) => rules.patch({ autoAllWatch: v })}
-          />
+          <p className="text-sm text-muted">
+            Bật Auto paper trên Desk thì mọi coin đang chữ Setup được vào lệnh giấy. Coin đã có vị thế thì bỏ qua.
+          </p>
         </div>
       </section>
 

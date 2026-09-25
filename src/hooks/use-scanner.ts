@@ -3,9 +3,10 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { fetchSnapshot, fetchTickers } from "@/lib/binance/api";
 import { DEFAULT_WATCH } from "@/lib/binance/constants";
-import { analyze, bestLive } from "@/lib/nukida/engine";
+import { analyze } from "@/lib/nukida/engine";
+import { notifyFill } from "@/hooks/use-signal-alerts";
 import { moneySl } from "@/lib/nukida/risk";
-import type { Signal, Ticker } from "@/lib/nukida/types";
+import type { Ticker } from "@/lib/nukida/types";
 import { usePaper } from "@/lib/store/paper";
 import { packOf, useMarket } from "@/lib/store/market";
 import { currentRules, useRules } from "@/lib/store/rules";
@@ -32,7 +33,7 @@ export function useScanner() {
   const applyTickers = useMarket((s) => s.applyTickers);
   const setLoading = useMarket((s) => s.setLoading);
   const setError = useMarket((s) => s.setError);
-  const lastAuto = useRef<string>("");
+  const lastAuto = useRef<Set<string>>(new Set());
 
   const focus = useQuery({
     queryKey: ["snapshot-focus", symbol],
@@ -165,25 +166,15 @@ export function useScanner() {
     if (!autoPaper || !(full.data ?? focus.data)) return;
     const rules = currentRules();
     const state = useMarket.getState();
-    const cands: Signal[] = [];
-    if (rules.autoAllWatch) {
-      for (const [sym, tfs] of Object.entries(state.books)) {
-        const p = packOf({ [sym]: tfs }, sym);
-        if (!p) continue;
-        const live = bestLive(analyze(p, rules), rules.minQuality);
-        if (live) cands.push(live);
-      }
-      cands.sort((a, b) => b.quality - a.quality);
-    } else {
-      const live = bestLive(state.signals, rules.minQuality);
-      if (live) cands.push(live);
-    }
     const paper = usePaper.getState();
     if (Date.now() < paper.haltUntil) return;
-    for (const live of cands) {
-      if (lastAuto.current === live.id) continue;
-      const settings = useSettings.getState();
-      const rules = currentRules();
+    const settings = useSettings.getState();
+    const setups = state.watchHits.filter((h) => h.requiredPass);
+    for (const hit of setups) {
+      const pack = packOf(state.books, hit.symbol);
+      if (!pack) continue;
+      const live = analyze(pack, rules).find((s) => s.requiredPass);
+      if (!live || lastAuto.current.has(live.id)) continue;
       const planned = moneySl(live, {
         marginUsd: settings.marginUsd,
         leverage: settings.maxLeverage,
@@ -200,11 +191,10 @@ export function useScanner() {
         sizeBy: "margin",
         mode: "paper",
       });
-      if (pos) {
-        lastAuto.current = live.id;
-        toast.success(`Paper ${live.side === "BUY" ? "MUA" : "BÁN"} ${live.symbol} · ${live.setupName}`);
-        break;
-      }
+      if (!pos) continue;
+      lastAuto.current.add(live.id);
+      toast.success(`Paper ${live.side === "BUY" ? "LONG" : "SHORT"} ${live.symbol.replace("USDT", "")} · ${live.setupName}`);
+      notifyFill(pos, "auto");
     }
   }, [autoPaper, full.data, focus.data, riskPct, equitySetting, leverageSetting, marginSetting, slUsd, symbol, ruleStamp]);
 }

@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { geoBlocked, placeLive } from "@/lib/binance/live";
 import { formatPrice, formatUsd } from "@/lib/nukida/format";
+import { notifyFill } from "@/hooks/use-signal-alerts";
 import { forcedSignal } from "@/lib/nukida/force";
 import { idleChecklist } from "@/lib/nukida/checklist";
 import { moneySl, orderSize } from "@/lib/nukida/risk";
@@ -262,6 +263,7 @@ function ForceEntry() {
       return;
     }
     toast.success(`Cưỡng bức ${buy ? "MUA" : "BÁN"} ${symbol.replace("USDT", "")}`);
+    notifyFill(pos, "force");
   }
 
   return (
