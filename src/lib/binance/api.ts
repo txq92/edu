@@ -25,6 +25,17 @@ export const fetchSnapshot = createServerFn({ method: "POST" })
     return getSnapshot(data);
   });
 
+export const fetchHistory = createServerFn({ method: "POST" })
+  .validator((d: unknown) => {
+    const x = d as { symbol?: string; days?: number };
+    if (!x?.symbol) throw new Error("symbol required");
+    return { symbol: x.symbol, days: Math.min(30, Math.max(1, Math.round(x.days ?? 7))) };
+  })
+  .handler(async ({ data }) => {
+    const { getHistory } = await import("./market.server");
+    return getHistory(data.symbol, data.days);
+  });
+
 export const fetchTickers = createServerFn({ method: "POST" })
   .validator((d: unknown) => {
     const x = d as { symbols?: string[] };

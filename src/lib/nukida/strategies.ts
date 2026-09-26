@@ -14,7 +14,7 @@ import {
   volumeSma,
 } from "./indicators";
 import { detectZones, exhaustedMove, findRangeBox, inZone, nearestZone, readStructure } from "./structure";
-import { paddedSl, rrOf, targets } from "./risk";
+import { paddedSl, rrOf, targets, zoneSl } from "./risk";
 import { DEFAULT_RULES, type RuleConfig } from "./rules";
 
 export type MarketPack = {
@@ -255,14 +255,14 @@ function toSignal(pack: MarketPack, raw: RawSetup, rules: RuleConfig, qualityBoo
   const last = lastClosed(tf5);
   if (!last) return null;
   const a = lastNum(atr(tf5, 14), 1) ?? last.c * 0.002;
-  const sl = paddedSl(raw.entry, raw.slRaw, raw.side, a);
+  const hit = zoneHit(pack, raw.side, raw.entry, rules.sensitivity);
+  const sl = (hit && zoneSl(raw.entry, hit, raw.side, 0.001)) || paddedSl(raw.entry, raw.slRaw, raw.side, a);
   const r1 = rules.minRr;
   const r2 = Math.max(2.5, r1 + 1);
   const { tp1, tp2 } = targets(raw.entry, sl, raw.side, r1, r2);
   const rr = rrOf(raw.entry, sl, tp1);
   const zones = frameZones(pack);
   const struct = readStructure(closedOnly(pack.tfH4.length ? pack.tfH4 : pack.tfH1));
-  const hit = zoneHit(pack, raw.side, raw.entry, rules.sensitivity);
   const zone = hit ?? nearestZone(raw.entry, zones, raw.side === "BUY" ? "bull" : "bear") ?? raw.zone;
   const tired = exhaustedMove(tf15, raw.side);
   const funding = nearFunding(pack.now ?? Date.now(), rules.fundingWindowMin);

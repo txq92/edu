@@ -139,6 +139,19 @@ export function rrOf(entry: number, sl: number, tp: number): number {
   return Math.abs(tp - entry) / risk;
 }
 
+export function zoneSl(
+  entry: number,
+  zone: { lo: number; hi: number },
+  side: Side,
+  pad = 0.001,
+): number | null {
+  const sl = side === "BUY" ? zone.lo * (1 - pad) : zone.hi * (1 + pad);
+  if (!(sl > 0) || !Number.isFinite(sl)) return null;
+  if (side === "BUY" && sl >= entry) return null;
+  if (side === "SELL" && sl <= entry) return null;
+  return sl;
+}
+
 export function paddedSl(entry: number, structureSl: number, side: Side, atrVal: number): number {
   const buffer = Math.max(atrVal * 0.25, entry * 0.0006);
   if (side === "BUY") return Math.min(structureSl, entry) - buffer;

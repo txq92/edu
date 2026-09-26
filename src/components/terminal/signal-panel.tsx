@@ -5,6 +5,8 @@ import { geoBlocked, placeLive } from "@/lib/binance/live";
 import { formatPrice, formatUsd } from "@/lib/nukida/format";
 import { notifyFill } from "@/hooks/use-signal-alerts";
 import { forcedSignal } from "@/lib/nukida/force";
+import { frameZones } from "@/lib/nukida/strategies";
+import { nearestZone } from "@/lib/nukida/structure";
 import { idleChecklist } from "@/lib/nukida/checklist";
 import { moneySl, orderSize } from "@/lib/nukida/risk";
 import type { ChecklistItem, Side, Signal } from "@/lib/nukida/types";
@@ -190,6 +192,10 @@ function ForceEntry() {
   const filters = useMarket((s) => s.filters);
   const paper = usePaper();
   const price = tickerOf(tickers, symbol)?.price ?? 0;
+  const pack = packOf(books, symbol);
+  const zone = pack
+    ? nearestZone(price, frameZones(pack), view === "BUY" ? "bull" : "bear")
+    : null;
   const raw =
     price > 0
       ? forcedSignal({
@@ -198,6 +204,7 @@ function ForceEntry() {
           price,
           candles: books[symbol]?.["5m"] ?? [],
           minRr,
+          zone,
         })
       : null;
   const plan = raw
@@ -270,7 +277,7 @@ function ForceEntry() {
     <div className="rounded-lg bg-raised p-4">
       <p className="text-xs tracking-wide text-muted uppercase">View của bạn</p>
       <h2 className="font-display text-2xl">Vào cưỡng bức</h2>
-      <p className="mt-1 text-xs text-muted">Bỏ checklist. Vẫn có SL theo ATR và size theo vốn đã đặt.</p>
+      <p className="mt-1 text-xs text-muted">Bỏ checklist. Không nhập tiền SL thì cắt cách mép vùng Bò/Gấu 0,1%.</p>
       <div className="mt-3 grid grid-cols-2 gap-2">
         {(["BUY", "SELL"] as Side[]).map((side) => (
           <button

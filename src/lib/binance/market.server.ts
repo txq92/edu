@@ -245,6 +245,76 @@ async function mapPool<T>(items: T[], size: number, fn: (item: T) => Promise<voi
   await Promise.all(workers);
 }
 
+export async function getHistory(symbol: string, days: number): Promise<{
+  symbol: string;
+  books: Record<string, Candle[]>;
+  step: number;
+}> {
+  const span = Math.min(30, Math.max(1, Math.round(days)));
+  const now = Date.now();
+  const day = 86_400_000;
+  const start = now - span * day;
+  const [m5, m15, h1, h4, filters] = await Promise.all([
+    fetchBinanceRange(symbol, "5m", start, now),
+    fetchBinanceRange(symbol, "15m", start, now),
+    fetchBinanceRange(symbol, "1h", now - (span + 15) * day, now),
+    fetchBinanceRange(symbol, "4h", now - (span + 40) * day, now),
+    getFilters(symbol),
+  ]);
+  return {
+    symbol,
+    books: { "5m": m5, "15m": m15, "1h": h1, "4h": h4 },
+    step: filters.step,
+  };
+}
+
+async function fetchBinanceRange(symbol: string, interval: string, start: number, end: number): Promise<Candle[]> {
+  const ms = BAR_MS[interval] ?? 60_000;
+  const order = [preferredHost, ...HOSTS.filter((h) => h !== preferredHost)];
+  for (const host of order) {
+    const rows = await pullRange(host, symbol, interval, start, end, ms);
+    if (rows.length) {
+      preferredHost = host;
+      return rows;
+    }
+  }
+  return [];
+}
+
+async function pullRange(
+  host: string,
+  symbol: string,
+  interval: string,
+  start: number,
+  end: number,
+  ms: number,
+): Promise<Candle[]> {
+  const out: Candle[] = [];
+  let cursor = start;
+  for (let page = 0; page < 12 && cursor < end; page++) {
+    let json: unknown;
+    try {
+      json = await fetchJson(
+        `${host}/api/v3/klines?symbol=${symbol}&interval=${interval}&startTime=${cursor}&endTime=${end}&limit=1000`,
+        8000,
+      );
+    } catch {
+      return out;
+    }
+    if (!Array.isArray(json) || !json.length || !Array.isArray(json[0])) break;
+    const batch = parseBinanceKlines(json as Array<Array<string | number>>);
+    if (!batch.length) break;
+    out.push(...batch);
+    const last = batch[batch.length - 1]!.t;
+    const next = last + ms;
+    if (batch.length < 1000 || next <= cursor) break;
+    cursor = next;
+  }
+  const map = new Map<number, Candle>();
+  for (const c of out) map.set(c.t, c);
+  return [...map.values()].sort((a, b) => a.t - b.t);
+}
+
 export async function getSnapshot(opts: {
   symbols: string[];
   focus: string;

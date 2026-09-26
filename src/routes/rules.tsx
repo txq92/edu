@@ -164,6 +164,33 @@ function RulesPage() {
         </div>
       </section>
 
+      <section className="mt-4 rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
+        <h2 className="font-display text-2xl">Ví dụ tín hiệu vào lệnh</h2>
+        <p className="mt-2 text-sm text-muted">BTC minh họa. Giá chỉ để thấy thứ tự, không phải tín hiệu lúc này.</p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="rounded-lg bg-raised p-4">
+            <p className="text-sm text-bull">Được vào · LONG</p>
+            <ol className="mt-3 space-y-2 text-sm text-muted">
+              <li>H4 đang tăng: đỉnh sau cao hơn đỉnh trước, đáy sau cao hơn đáy trước.</li>
+              <li>H1 có vùng Bò 84,200–84,450. Đó là đáy H1 mà giá đã bật lên.</li>
+              <li>Giá 5 phút hồi về 84,310, nằm trong vùng Bò. Nến 5 phút đóng cửa xanh, râu dưới giữ trên 84,200.</li>
+              <li>Vào 84,310. SL dưới vùng, 83,960. TP theo R:R đang bật.</li>
+            </ol>
+            <p className="mt-3 text-xs text-faint">EMA hoặc VWAP trên 5 phút chỉ là xác nhận thêm. Thiếu vùng H1/H4 thì không vào.</p>
+          </div>
+          <div className="rounded-lg bg-raised p-4">
+            <p className="text-sm text-bear">Không vào · giống lệnh vừa thua</p>
+            <ol className="mt-3 space-y-2 text-sm text-muted">
+              <li>H4 vẫn tăng hoặc đi ngang, không có xu hướng giảm.</li>
+              <li>15 phút EMA quay xuống và giá bị từ chối tại VWAP.</li>
+              <li>5 phút có nến đỏ, nhưng giá đang ở giữa, không chạm vùng Gấu của H1 hay H4.</li>
+              <li>Bot bỏ. Không short chỉ vì hồi 15 phút.</li>
+            </ol>
+            <p className="mt-3 text-xs text-faint">Short chỉ khi H4 hoặc H1 đang giảm và giá 5 phút chạm vùng Gấu của chính khung đó.</p>
+          </div>
+        </div>
+      </section>
+
       <div className="mt-4 flex flex-col gap-4">
         {BLOCKS.map((b) => (
           <section key={b.title} className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">

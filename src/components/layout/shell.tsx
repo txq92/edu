@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { BookOpen, LayoutGrid, ScrollText, Settings } from "lucide-react";
+import { BookOpen, FlaskConical, LayoutGrid, ScrollText, Settings } from "lucide-react";
 import type { ReactNode } from "react";
 import { useSignalAlerts } from "@/hooks/use-signal-alerts";
 import { formatPrice } from "@/lib/nukida/format";
@@ -9,6 +9,7 @@ const NAV = [
   { to: "/", label: "Desk", icon: LayoutGrid },
   { to: "/journal", label: "Nhật ký", icon: ScrollText },
   { to: "/rules", label: "Rule", icon: BookOpen },
+  { to: "/backtest", label: "Test", icon: FlaskConical },
   { to: "/settings", label: "Cài đặt", icon: Settings },
 ] as const;
 
@@ -68,7 +69,7 @@ export function Shell({ children }: { children: ReactNode }) {
         </div>
       ) : null}
       <main className="mx-auto w-full max-w-screen-2xl flex-1 px-3 py-4 pb-20 md:px-4 md:pb-6">{children}</main>
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-line bg-bg/95 md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-bg/95 md:hidden">
         {NAV.map((item) => (
           <Link
             key={item.to}

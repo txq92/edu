@@ -113,7 +113,7 @@ function SettingsPage() {
               type="number"
               min={0}
               step={0.5}
-              placeholder="Để trống = SL của tool"
+              placeholder="Để trống = SL vùng ± 0,1%"
               value={s.slUsd || ""}
               onChange={(e) => s.patch({ slUsd: Math.max(0, Number(e.target.value) || 0) })}
             />
@@ -122,7 +122,7 @@ function SettingsPage() {
             {formatUsd(s.marginUsd, 0)} × {s.maxLeverage}x = khối lượng {formatUsd(s.marginUsd * s.maxLeverage, 0)}.{" "}
             {s.slUsd > 0
               ? `SL khi lỗ ${formatUsd(s.slUsd)}. TP tính lại theo R:R.`
-              : "Không nhập ngưỡng thì SL và TP theo tính toán của tool."}
+              : "Không nhập thì SL cách mép vùng Bò/Gấu 0,1%. Long dưới vùng, short trên vùng."}
           </p>
           <Button
             variant="outline"
