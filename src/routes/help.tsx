@@ -4,6 +4,19 @@ export const Route = createFileRoute("/help")({ component: HelpPage });
 
 const SECTIONS: Array<{ title: string; items: string[] }> = [
   {
+    title: "Cài trên máy local",
+    items: [
+      "Trong thư mục source: npm install rồi npm run dev. Lệnh này chạy node scripts/with-app-env.mjs vite dev --host 0.0.0.0 --port 8080.",
+      "Script đọc .grok/app-env.json trước khi bật Vite. Chỉ lấy khóa bắt đầu bằng VITE_. Biến process.env cùng tên được ưu tiên hơn file.",
+      "File hiện có VITE_AUTH_ENABLED là false. Khóa deploy trong file không được nạp vì không bắt đầu bằng VITE_.",
+      "Không có DATABASE_URL thì sổ mật khẩu dùng PGLite trong RAM của process. Sửa code và hot reload không xóa sổ. Tắt npm run dev là sổ mật khẩu mất. npm run build gọi db:migrate, không có DATABASE_URL thì migrate bỏ qua.",
+      "Có DATABASE_URL thì dùng Postgres. migrate áp migrations/*.sql, trong đó có bảng player_book.",
+      "Cài đặt và Rule không nằm trên server. Trình duyệt lưu localStorage tên nukida-settings và nukida-rules. API key, secret, Telegram, tiền vào, đòn bẩy, SL tiền nằm trong nukida-settings.",
+      "Sổ lệnh có bản local nukida-paper và bản server. Server là một dòng player_book, id solo, cột doc kiểu JSON: hash mật khẩu scrypt, token, và paper. Mật khẩu tối thiểu 4 ký tự. Token đăng nhập lưu localStorage tên meo-den-token.",
+      "Đổi trình duyệt trên cùng máy chủ thì nhập lại mật khẩu để kéo sổ. API key và rule không đi theo sổ, phải nhập lại trên trình duyệt đó.",
+    ],
+  },
+  {
     title: "Các màn",
     items: [
       "Desk: watchlist, biểu đồ, thẻ setup, checklist, vị thế.",
