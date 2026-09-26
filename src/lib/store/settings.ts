@@ -5,7 +5,7 @@ import { DEFAULT_WATCH, MAX_WATCH, type SymbolId } from "@/lib/binance/constants
 type SettingsData = {
   symbol: SymbolId;
   watch: string[];
-  chartTf: "3m" | "5m" | "15m" | "1h" | "4h";
+  chartTf: "1m" | "3m" | "5m" | "15m" | "1h" | "4h" | "1d";
   equity: number;
   riskPct: number;
   marginUsd: number;

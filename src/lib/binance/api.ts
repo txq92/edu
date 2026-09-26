@@ -16,7 +16,7 @@ export const fetchSnapshot = createServerFn({ method: "POST" })
     return {
       symbols: x.symbols.slice(0, 20),
       focus: x.focus,
-      intervals: x.intervals.slice(0, 6),
+      intervals: x.intervals.slice(0, 8),
       limit: Math.min(x.limit ?? 200, 500),
     };
   })

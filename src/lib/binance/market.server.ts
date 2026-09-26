@@ -5,27 +5,33 @@ const BINANCE_US = "https://api.binance.us";
 const OKX = "https://www.okx.com";
 
 const OKX_BAR: Record<string, string> = {
+  "1m": "1m",
   "3m": "3m",
   "5m": "5m",
   "15m": "15m",
   "1h": "1H",
   "4h": "4H",
+  "1d": "1D",
 };
 
 const BAR_MS: Record<string, number> = {
+  "1m": 60_000,
   "3m": 3 * 60_000,
   "5m": 5 * 60_000,
   "15m": 15 * 60_000,
   "1h": 3600_000,
   "4h": 4 * 3600_000,
+  "1d": 24 * 3600_000,
 };
 
 const FRESH_MS: Record<string, number> = {
+  "1m": 3_000,
   "3m": 4_000,
   "5m": 6_000,
   "15m": 12_000,
   "1h": 40_000,
   "4h": 90_000,
+  "1d": 120_000,
 };
 
 const HOSTS = [VISION, BINANCE_US];

@@ -42,7 +42,7 @@ export function useScanner() {
         data: {
           symbols: [symbol],
           focus: symbol,
-          intervals: ["3m", "5m", "15m", "1h", "4h"],
+          intervals: ["1m", "3m", "5m", "15m", "1h", "4h", "1d"],
           limit: 120,
         },
       }),

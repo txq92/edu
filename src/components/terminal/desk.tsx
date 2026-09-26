@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useScanner } from "@/hooks/use-scanner";
-import { INTERVALS, INTERVAL_LABEL } from "@/lib/binance/constants";
+import { CHART_INTERVALS, INTERVAL_LABEL } from "@/lib/binance/constants";
 import { moneySl } from "@/lib/nukida/risk";
 import { useRules } from "@/lib/store/rules";
 import { formatPct, formatPrice, formatUsd } from "@/lib/nukida/format";
@@ -114,7 +114,7 @@ export function Desk() {
             <div className="max-w-full overflow-x-auto">
               <Tabs value={chartTf} onValueChange={(v) => setChartTf(v as typeof chartTf)}>
                 <TabsList>
-                  {INTERVALS.map((tf) => (
+                  {CHART_INTERVALS.map((tf) => (
                     <TabsTrigger key={tf} value={tf}>
                       {INTERVAL_LABEL[tf]}
                     </TabsTrigger>

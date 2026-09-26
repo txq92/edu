@@ -50,14 +50,17 @@ export function normalizeSymbol(raw: string): string | null {
 }
 
 export const INTERVALS = ["3m", "5m", "15m", "1h", "4h"] as const;
-export type Interval = (typeof INTERVALS)[number];
+export const CHART_INTERVALS = ["1m", "3m", "5m", "15m", "1h", "4h", "1d"] as const;
+export type Interval = (typeof CHART_INTERVALS)[number];
 
 export const INTERVAL_LABEL: Record<string, string> = {
+  "1m": "M1",
   "3m": "M3",
   "5m": "M5",
   "15m": "M15",
   "1h": "H1",
   "4h": "H4",
+  "1d": "D1",
 };
 
 export const LIVE_PATHS = new Set([
