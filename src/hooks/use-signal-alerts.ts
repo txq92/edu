@@ -34,7 +34,7 @@ export function alertText(signal: Signal): string {
   return [
     `Mèo Đen · TÍN HIỆU · chưa vào lệnh`,
     `${side} ${signal.symbol}`,
-    signal.setupName,
+    `${signal.symbol.replace("USDT", "")} · ${signal.setupName}`,
     `Vào ${formatPrice(signal.entry)}`,
     `SL ${formatPrice(signal.sl)}`,
     `TP1 ${formatPrice(signal.tp1)}`,
@@ -55,7 +55,7 @@ export function notifyFill(pos: Position, kind: "auto" | "force") {
   const text = [
     `Mèo Đen · ${label} ${side} ${pos.symbol}`,
     pos.mode === "live" ? "Lệnh thật" : "Lệnh giấy",
-    pos.setupName,
+    `${pos.symbol.replace("USDT", "")} · ${pos.setupName}`,
     `Vào ${formatPrice(pos.entry)}`,
     `SL ${formatPrice(pos.sl)}`,
     `TP1 ${formatPrice(pos.tp1)}`,
@@ -83,7 +83,9 @@ export function useSignalAlerts() {
       remember(key);
       show(signal);
       const side = signal.side === "BUY" ? "LONG" : "SHORT";
-      toast.message(`${side} ${signal.symbol.replace("USDT", "")}`, { description: signal.setupName });
+      toast.message(`${signal.symbol.replace("USDT", "")} · ${signal.setupName}`, {
+        description: side,
+      });
       if (!tgAlerts || !tgToken || !tgChatId) continue;
       void telegramSend({ data: { token: tgToken, chatId: tgChatId, text: alertText(signal) } }).catch((e) => {
         toast.error(e instanceof Error ? e.message : "Không gửi được Telegram.");

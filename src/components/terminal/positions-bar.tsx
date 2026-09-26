@@ -13,6 +13,7 @@ export function PositionsBar() {
   const symbol = useSettings((s) => s.symbol);
   const setSymbol = useSettings((s) => s.setSymbol);
   const halted = Date.now() < haltUntil;
+  const resume = usePaper((s) => s.resume);
 
   function openOnChart(next: string) {
     setSymbol(next);
@@ -22,15 +23,30 @@ export function PositionsBar() {
   if (!positions.length) {
     return (
       <div className="rounded-lg bg-raised px-4 py-3 text-sm text-muted">
-        {halted
-          ? "Đã halt sau 3 lệnh thua trong ngày — đứng ngoài, review rule."
-          : "Chưa có vị thế. Đợi setup đủ A+B+C+D+F rồi vào."}
+        {halted ? (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span>Đã halt sau 3 lệnh thua trong ngày — đứng ngoài, review rule.</span>
+            <Button size="sm" variant="outline" onClick={() => resume()}>
+              Vào lệnh lại
+            </Button>
+          </div>
+        ) : (
+          "Chưa có vị thế. Đợi setup đủ A+B+C+D+F rồi vào."
+        )}
       </div>
     );
   }
 
   return (
     <div className="overflow-x-auto">
+      {halted ? (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-raised px-4 py-3 text-sm text-muted">
+          <span>Đã halt sau 3 lệnh thua trong ngày — đứng ngoài, review rule.</span>
+          <Button size="sm" variant="outline" onClick={() => resume()}>
+            Vào lệnh lại
+          </Button>
+        </div>
+      ) : null}
       <table className="w-full text-left text-sm">
         <thead className="text-xs text-faint">
           <tr>
@@ -59,7 +75,9 @@ export function PositionsBar() {
               >
                 <td className="py-3 pr-4">
                   {p.symbol.replace("USDT", "")}
-                  <div className="text-xs text-faint">{p.setupName}</div>
+                  <div className="text-xs text-faint">
+                    {p.symbol.replace("USDT", "")} · {p.setupName}
+                  </div>
                 </td>
                 <td className={p.side === "BUY" ? "pr-4 text-bull" : "pr-4 text-bear"}>
                   {p.side === "BUY" ? "LONG" : "SHORT"}

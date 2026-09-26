@@ -193,7 +193,7 @@ export function useScanner() {
       });
       if (!pos) continue;
       lastAuto.current.add(live.id);
-      toast.success(`Paper ${live.side === "BUY" ? "LONG" : "SHORT"} ${live.symbol.replace("USDT", "")} · ${live.setupName}`);
+      toast.success(`${live.symbol.replace("USDT", "")} · ${live.side === "BUY" ? "LONG" : "SHORT"} · ${live.setupName}`);
       notifyFill(pos, "auto");
     }
   }, [autoPaper, full.data, focus.data, riskPct, equitySetting, leverageSetting, marginSetting, slUsd, symbol, ruleStamp]);

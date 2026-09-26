@@ -53,10 +53,10 @@ export function Shell({ children }: { children: ReactNode }) {
         <div className="border-b border-line bg-raised px-4 py-3">
           <div className="mx-auto flex max-w-screen-2xl items-start justify-between gap-3">
             <div>
-              <p className={buy ? "text-sm text-bull" : "text-sm text-bear"}>
-                Tín hiệu {buy ? "LONG" : "SHORT"} {alert.symbol.replace("USDT", "")}
+              <p className="text-sm text-fg">
+                {alert.symbol.replace("USDT", "")} · {alert.setupName}
               </p>
-              <p className="mt-1 text-sm text-fg">{alert.setupName}</p>
+              <p className={`mt-1 text-sm ${buy ? "text-bull" : "text-bear"}`}>{buy ? "LONG" : "SHORT"}</p>
               <p className="mt-1 font-mono text-xs text-muted">
                 Vào {formatPrice(alert.entry)} · SL {formatPrice(alert.sl)} · TP1 {formatPrice(alert.tp1)} · TP2{" "}
                 {formatPrice(alert.tp2)}

@@ -24,6 +24,7 @@ type SettingsData = {
   tgChatId: string;
   tgAlerts: boolean;
   consecutiveLossHalt: number;
+  watchSeeded: boolean;
 };
 
 export type Settings = SettingsData & {
@@ -58,6 +59,7 @@ export const useSettings = create<Settings>()(
       tgChatId: "",
       tgAlerts: true,
       consecutiveLossHalt: 3,
+      watchSeeded: false,
       setSymbol: (symbol) => set({ symbol }),
       addWatch: (id) => {
         const { watch } = get();

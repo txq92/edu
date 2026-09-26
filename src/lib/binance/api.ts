@@ -14,7 +14,7 @@ export const fetchSnapshot = createServerFn({ method: "POST" })
       throw new Error("snapshot input invalid");
     }
     return {
-      symbols: x.symbols.slice(0, 16),
+      symbols: x.symbols.slice(0, 20),
       focus: x.focus,
       intervals: x.intervals.slice(0, 6),
       limit: Math.min(x.limit ?? 200, 500),
@@ -40,7 +40,7 @@ export const fetchTickers = createServerFn({ method: "POST" })
   .validator((d: unknown) => {
     const x = d as { symbols?: string[] };
     if (!Array.isArray(x?.symbols)) throw new Error("symbols required");
-    return { symbols: x.symbols.slice(0, 16) };
+    return { symbols: x.symbols.slice(0, 20) };
   })
   .handler(async ({ data }) => {
     const { getTickers } = await import("./market.server");

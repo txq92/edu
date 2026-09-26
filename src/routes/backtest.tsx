@@ -351,7 +351,9 @@ function BacktestPage() {
               </h2>
               <span className={cn("font-mono tabular-nums", r.pnl >= 0 ? "text-bull" : "text-bear")}>{formatUsd(r.pnl)}</span>
             </div>
-            <p className="mt-1 text-sm text-muted">{r.setupName}</p>
+            <p className="mt-1 text-sm text-muted">
+              {r.symbol.replace("USDT", "")} · {r.setupName}
+            </p>
             <p className="mt-2 text-sm text-faint">
               {formatDateTime(r.at)} · {labelOf(r.outcome)} · {r.r.toFixed(2)}R
             </p>

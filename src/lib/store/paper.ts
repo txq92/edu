@@ -29,6 +29,7 @@ type PaperState = {
   tick: (tickers: Ticker[]) => void;
   close: (id: string, price: number, reason: string) => void;
   reset: (equity: number) => void;
+  resume: () => void;
 };
 
 function journalFrom(signal: Signal, riskPct: number): JournalEntry {
@@ -216,6 +217,7 @@ export const usePaper = create<PaperState>()(
           haltUntil: 0,
           lossesToday: 0,
         }),
+      resume: () => set({ haltUntil: 0, lossesToday: 0 }),
     }),
     { name: "nukida-paper", skipHydration: true },
   ),

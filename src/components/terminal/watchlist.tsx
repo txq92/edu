@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchTickers } from "@/lib/binance/api";
-import { isDefaultSymbol, MAX_WATCH, normalizeSymbol, symbolMeta } from "@/lib/binance/constants";
+import { MAX_WATCH, normalizeSymbol, symbolMeta } from "@/lib/binance/constants";
 import { formatPct, formatPrice } from "@/lib/nukida/format";
 import { tickerOf, useMarket } from "@/lib/store/market";
 import { useSettings } from "@/lib/store/settings";
@@ -72,18 +72,18 @@ export function Watchlist() {
           Thêm
         </Button>
       </form>
+      <div className="flex max-h-[300px] flex-col gap-1 overflow-y-auto overscroll-contain pr-1">
       {watch.map((id) => {
         const s = symbolMeta(id);
         const t = tickerOf(tickers, id);
         const hit = hits.find((h) => h.symbol === id);
         const active = symbol === id;
         const up = (t?.changePct ?? 0) >= 0;
-        const custom = !isDefaultSymbol(id);
         return (
           <div
             key={id}
             className={cn(
-              "flex min-h-11 items-center rounded-md transition-colors duration-150",
+              "flex min-h-11 shrink-0 items-center rounded-md transition-colors duration-150",
               active ? "bg-raised" : "hover:bg-raised/60",
             )}
           >
@@ -106,7 +106,7 @@ export function Watchlist() {
                 </div>
               </div>
             </button>
-            {custom ? (
+            {watch.length > 1 ? (
               <button
                 type="button"
                 aria-label={`Xóa ${s.label}`}
@@ -119,6 +119,7 @@ export function Watchlist() {
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

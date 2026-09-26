@@ -4,6 +4,20 @@ export const SYMBOLS = [
   { id: "SOLUSDT", label: "SOL", name: "Solana" },
   { id: "BNBUSDT", label: "BNB", name: "BNB" },
   { id: "XRPUSDT", label: "XRP", name: "XRP" },
+  { id: "DOGEUSDT", label: "DOGE", name: "Dogecoin" },
+  { id: "ADAUSDT", label: "ADA", name: "Cardano" },
+  { id: "AVAXUSDT", label: "AVAX", name: "Avalanche" },
+  { id: "LINKUSDT", label: "LINK", name: "Chainlink" },
+  { id: "TRXUSDT", label: "TRX", name: "TRON" },
+  { id: "LTCUSDT", label: "LTC", name: "Litecoin" },
+  { id: "DOTUSDT", label: "DOT", name: "Polkadot" },
+  { id: "UNIUSDT", label: "UNI", name: "Uniswap" },
+  { id: "NEARUSDT", label: "NEAR", name: "NEAR" },
+  { id: "APTUSDT", label: "APT", name: "Aptos" },
+  { id: "SUIUSDT", label: "SUI", name: "Sui" },
+  { id: "TONUSDT", label: "TON", name: "Toncoin" },
+  { id: "FILUSDT", label: "FIL", name: "Filecoin" },
+  { id: "AAVEUSDT", label: "AAVE", name: "Aave" },
   { id: "PAXGUSDT", label: "PAXG", name: "Vàng (PAXG)" },
 ] as const;
 
@@ -11,7 +25,7 @@ export type SymbolId = string;
 
 export const DEFAULT_WATCH = SYMBOLS.map((s) => s.id);
 
-export const MAX_WATCH = 16;
+export const MAX_WATCH = 20;
 
 const DEFAULT_IDS = new Set<string>(DEFAULT_WATCH);
 

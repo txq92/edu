@@ -99,7 +99,9 @@ Bài học: ${j.lesson ?? ""}
                   </h2>
                   <span className={cn("font-mono tabular-nums", u >= 0 ? "text-bull" : "text-bear")}>{formatUsd(u)}</span>
                 </div>
-                <p className="mt-1 text-sm text-muted">{p.setupName}</p>
+                <p className="mt-1 text-sm text-muted">
+                  {p.symbol.replace("USDT", "")} · {p.setupName}
+                </p>
                 <Times position={p} />
                 <dl className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
                   <div>

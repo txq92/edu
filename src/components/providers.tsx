@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Toaster } from "sonner";
 import { useRules } from "@/lib/store/rules";
 import { useSettings } from "@/lib/store/settings";
+import { DEFAULT_WATCH, MAX_WATCH } from "@/lib/binance/constants";
 
 export function AppProviders({ children }: { children: ReactNode }) {
   const [client] = useState(
@@ -15,8 +16,15 @@ export function AppProviders({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    void useSettings.persist.rehydrate();
-    void useRules.persist.rehydrate();
+    void (async () => {
+      await useSettings.persist.rehydrate();
+      await useRules.persist.rehydrate();
+      const s = useSettings.getState();
+      if (s.watchSeeded) return;
+      const missing = DEFAULT_WATCH.filter((id) => !s.watch.includes(id));
+      const watch = [...s.watch, ...missing].slice(0, MAX_WATCH);
+      useSettings.setState({ watch, watchSeeded: true });
+    })();
   }, []);
 
   return (

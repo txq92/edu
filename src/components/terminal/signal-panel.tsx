@@ -32,13 +32,13 @@ export function SignalPanel() {
         <SignalCard signal={live} others={signals.filter((s) => s.id !== live.id)} />
       ) : (
         <div className="rounded-lg bg-raised p-4">
-          <p className="font-display text-lg">Đứng ngoài</p>
+          <p className="font-display text-lg">{symbol.replace("USDT", "")} · Đứng ngoài</p>
           <p className="mt-2 text-sm text-muted">
             Không có setup đủ điều kiện. Checklist bên dưới vẫn chấm theo khung lớn và view bạn đang chọn.
           </p>
         </div>
       )}
-      <Checklist items={items} />
+      <Checklist items={items} symbol={symbol} />
       <ForceEntry />
     </div>
   );
@@ -73,7 +73,7 @@ function SignalCard({ signal, others }: { signal: Signal; others: Signal[] }) {
       toast.error("Không vào được — đang halt, trùng vị thế, hoặc thiếu size.");
       return;
     }
-    toast.success(`Đã vào lệnh giấy ${buy ? "MUA" : "BÁN"} ${signal.symbol}`);
+    toast.success(`Đã vào lệnh giấy ${signal.symbol.replace("USDT", "")} · ${buy ? "MUA" : "BÁN"}`);
   }
 
   async function enterLive() {
@@ -111,7 +111,7 @@ function SignalCard({ signal, others }: { signal: Signal; others: Signal[] }) {
         sizeBy: "margin",
         mode: "live",
       });
-      toast.success("Đã gửi lệnh Binance Futures + SL/TP.");
+      toast.success(`Đã gửi ${signal.symbol.replace("USDT", "")} lên Binance Futures.`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Lỗi live order");
     }
@@ -123,7 +123,9 @@ function SignalCard({ signal, others }: { signal: Signal; others: Signal[] }) {
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs tracking-wide text-muted uppercase">Setup</p>
-            <h2 className="font-display text-2xl">{signal.setupName}</h2>
+            <h2 className="font-display text-2xl">
+              {signal.symbol.replace("USDT", "")} · {signal.setupName}
+            </h2>
           </div>
           <Badge tone={signal.requiredPass ? (buy ? "bull" : "bear") : "warn"}>
             {signal.requiredPass ? "ĐƯỢC VÀO" : "THEO DÕI"}
@@ -171,7 +173,9 @@ function SignalCard({ signal, others }: { signal: Signal; others: Signal[] }) {
           <p className="mb-2 text-xs text-muted">Setup khác trên cặp này</p>
           {others.map((s) => (
             <div key={s.id} className="flex items-center justify-between py-1 text-sm">
-              <span>{s.setupName}</span>
+              <span>
+                {s.symbol.replace("USDT", "")} · {s.setupName}
+              </span>
               <span className={s.side === "BUY" ? "text-bull" : "text-bear"}>Q{Math.round(s.quality)}</span>
             </div>
           ))}
@@ -269,14 +273,14 @@ function ForceEntry() {
       toast.error("Không vào được — cặp này đang có vị thế, hoặc size bằng 0.");
       return;
     }
-    toast.success(`Cưỡng bức ${buy ? "MUA" : "BÁN"} ${symbol.replace("USDT", "")}`);
+    toast.success(`Cưỡng bức ${symbol.replace("USDT", "")} · ${buy ? "MUA" : "BÁN"}`);
     notifyFill(pos, "force");
   }
 
   return (
     <div className="rounded-lg bg-raised p-4">
       <p className="text-xs tracking-wide text-muted uppercase">View của bạn</p>
-      <h2 className="font-display text-2xl">Vào cưỡng bức</h2>
+      <h2 className="font-display text-2xl">{symbol.replace("USDT", "")} · Vào cưỡng bức</h2>
       <p className="mt-1 text-xs text-muted">Bỏ checklist. Không nhập tiền SL thì cắt cách mép vùng Bò/Gấu 0,1%.</p>
       <div className="mt-3 grid grid-cols-2 gap-2">
         {(["BUY", "SELL"] as Side[]).map((side) => (
@@ -326,7 +330,7 @@ function Stat({ k, v }: { k: string; v: string }) {
   );
 }
 
-function Checklist({ items }: { items: ChecklistItem[] }) {
+function Checklist({ items, symbol }: { items: ChecklistItem[]; symbol: string }) {
   const groups = ["A", "B", "C", "D", "E", "F"] as const;
   const titles: Record<(typeof groups)[number], string> = {
     A: "Hướng",
@@ -338,7 +342,9 @@ function Checklist({ items }: { items: ChecklistItem[] }) {
   };
   return (
     <div className="rounded-lg bg-raised p-4">
-      <p className="mb-3 text-xs tracking-wide text-muted uppercase">Checklist Luật Bò Gấu</p>
+      <p className="mb-3 text-xs tracking-wide text-muted uppercase">
+        {symbol.replace("USDT", "")} · Checklist Luật Bò Gấu
+      </p>
       {groups.map((g) => (
         <div key={g} className="mb-3 last:mb-0">
           <p className="mb-1 text-xs font-medium text-fg">
