@@ -75,7 +75,7 @@ export function frameZones(pack: MarketPack): Zone[] {
   const tag = (candles: Candle[], tf: string) =>
     detectZones(closedOnly(candles)).map((z) => ({
       ...z,
-      label: `${z.kind === "bull" ? "Vùng Bò" : "Vùng Gấu"} ${tf}`,
+      label: `${tf} ${z.kind === "bull" ? "Bò" : "Gấu"}`,
     }));
   return [...tag(pack.tfH4, "H4"), ...tag(pack.tfH1, "H1")];
 }

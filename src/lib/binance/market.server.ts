@@ -25,13 +25,13 @@ const BAR_MS: Record<string, number> = {
 };
 
 const FRESH_MS: Record<string, number> = {
-  "1m": 3_000,
-  "3m": 4_000,
-  "5m": 6_000,
-  "15m": 12_000,
-  "1h": 40_000,
-  "4h": 90_000,
-  "1d": 120_000,
+  "1m": 12_000,
+  "3m": 15_000,
+  "5m": 20_000,
+  "15m": 45_000,
+  "1h": 90_000,
+  "4h": 180_000,
+  "1d": 600_000,
 };
 
 const HOSTS = [VISION, BINANCE_US];
@@ -148,11 +148,21 @@ async function loadKlines(symbol: string, interval: string, limit: number, hit: 
   return candles;
 }
 
+function cacheFresh(hit: KlineCache, interval: string, limit: number): boolean {
+  if (hit.candles.length < limit) return false;
+  const bar = BAR_MS[interval] ?? 60_000;
+  const last = hit.candles[hit.candles.length - 1];
+  if (!last) return false;
+  const age = Date.now() - hit.at;
+  const sameBar = Date.now() < last.t + bar;
+  if (!sameBar) return age < 2_000;
+  return age < (FRESH_MS[interval] ?? 12_000);
+}
+
 export async function getKlines(symbol: string, interval: string, limit = 200): Promise<Candle[]> {
   const key = `${symbol}|${interval}`;
   const hit = klineCache.get(key);
-  const freshFor = FRESH_MS[interval] ?? 12_000;
-  if (hit && Date.now() - hit.at < freshFor && hit.candles.length >= limit) {
+  if (hit && hit.candles.length >= limit && cacheFresh(hit, interval, limit)) {
     return hit.candles.slice(-limit);
   }
   const pending = inflight.get(key);
@@ -326,17 +336,17 @@ export async function getSnapshot(opts: {
   focus: string;
   intervals: string[];
   limit?: number;
+  tails?: boolean;
 }) {
-  const limit = opts.limit ?? 120;
-  const watchLimit = Math.min(limit, 90);
+  const limit = opts.limit ?? 288;
   const others = opts.symbols.filter((s) => s !== opts.focus);
   const watchBooks: Array<readonly [string, Record<string, Candle[]>]> = [];
 
   const [tickers, focusBooks, , filters] = await Promise.all([
     getTickers(opts.symbols),
     Promise.all(opts.intervals.map((iv) => getKlines(opts.focus, iv, limit).then((c) => [iv, c] as const))),
-    mapPool(others, 8, async (s) => {
-      const [tf5, tf15] = await Promise.all([getKlines(s, "5m", watchLimit), getKlines(s, "15m", watchLimit)]);
+    mapPool(others, 12, async (s) => {
+      const [tf5, tf15] = await Promise.all([getKlines(s, "5m", limit), getKlines(s, "15m", limit)]);
       watchBooks.push([s, { "5m": tf5, "15m": tf15 }] as const);
     }),
     getFilters(opts.focus),
@@ -346,6 +356,14 @@ export async function getSnapshot(opts: {
     [opts.focus]: Object.fromEntries(focusBooks),
   };
   for (const [sym, data] of watchBooks) books[sym] = data;
+  if (opts.tails) {
+    for (const tfs of Object.values(books)) {
+      for (const iv of Object.keys(tfs)) {
+        const rows = tfs[iv];
+        if (rows && rows.length > 8) tfs[iv] = rows.slice(-8);
+      }
+    }
+  }
 
   return { tickers, books, filters, source: "binance-vision" as const, at: Date.now() };
 }

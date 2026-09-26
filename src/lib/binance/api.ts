@@ -9,7 +9,7 @@ export type SignedResult = {
 
 export const fetchSnapshot = createServerFn({ method: "POST" })
   .validator((d: unknown) => {
-    const x = d as { symbols?: string[]; focus?: string; intervals?: string[]; limit?: number };
+    const x = d as { symbols?: string[]; focus?: string; intervals?: string[]; limit?: number; tails?: boolean };
     if (!x?.focus || !Array.isArray(x.symbols) || !Array.isArray(x.intervals)) {
       throw new Error("snapshot input invalid");
     }
@@ -18,11 +18,24 @@ export const fetchSnapshot = createServerFn({ method: "POST" })
       focus: x.focus,
       intervals: x.intervals.slice(0, 8),
       limit: Math.min(x.limit ?? 200, 500),
+      tails: Boolean(x.tails),
     };
   })
   .handler(async ({ data }) => {
     const { getSnapshot } = await import("./market.server");
     return getSnapshot(data);
+  });
+
+export const fetchSeries = createServerFn({ method: "POST" })
+  .validator((d: unknown) => {
+    const x = d as { symbol?: string; interval?: string; limit?: number };
+    const ok = new Set(["1m", "3m", "5m", "15m", "1h", "4h", "1d"]);
+    if (!x?.symbol || !x.interval || !ok.has(x.interval)) throw new Error("series input invalid");
+    return { symbol: x.symbol, interval: x.interval, limit: Math.min(x.limit ?? 288, 500) };
+  })
+  .handler(async ({ data }) => {
+    const { getKlines } = await import("./market.server");
+    return getKlines(data.symbol, data.interval, data.limit);
   });
 
 export const fetchHistory = createServerFn({ method: "POST" })

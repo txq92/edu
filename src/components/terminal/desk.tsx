@@ -7,7 +7,8 @@ import { CHART_INTERVALS, INTERVAL_LABEL } from "@/lib/binance/constants";
 import { moneySl } from "@/lib/nukida/risk";
 import { useRules } from "@/lib/store/rules";
 import { formatPct, formatPrice, formatUsd } from "@/lib/nukida/format";
-import { currentBias, tickerOf, useMarket } from "@/lib/store/market";
+import { currentBias, packOf, tickerOf, useMarket } from "@/lib/store/market";
+import { frameZones } from "@/lib/nukida/strategies";
 import { paperEquity, usePaper } from "@/lib/store/paper";
 import { useSettings } from "@/lib/store/settings";
 import { PositionsBar } from "./positions-bar";
@@ -15,7 +16,7 @@ import { PriceChart } from "./price-chart";
 import { SignalPanel } from "./signal-panel";
 import { Watchlist } from "./watchlist";
 import { cn } from "@/lib/utils";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 export function Desk() {
   useScanner();
@@ -41,6 +42,10 @@ export function Desk() {
   const slUsd = useSettings((s) => s.slUsd);
   const ticker = tickerOf(tickers, symbol);
   const candles = books[symbol]?.[chartTf] ?? [];
+  const htfZones = useMemo(() => {
+    const pack = packOf(books, symbol);
+    return pack ? frameZones(pack) : [];
+  }, [books, symbol]);
   const bias = currentBias(books, symbol);
   const live = signals.find((s) => s.requiredPass) ?? null;
   const shown = live
@@ -139,12 +144,14 @@ export function Desk() {
               <div className="flex h-full items-center justify-center text-sm text-muted">Đang kéo nến…</div>
             ) : (
               <PriceChart
+                key={`${symbol}-${chartTf}`}
                 candles={candles}
                 signal={open ? null : shown}
                 entry={open?.entry}
                 sl={open?.sl}
                 tp1={open?.tp1}
                 tp2={open?.tp2}
+                zones={htfZones}
                 resetKey={`${symbol}-${chartTf}`}
               />
             )}

@@ -35,7 +35,7 @@ const SECTIONS: Array<{ title: string; items: string[] }> = [
       "Nút Vào lệnh giấy và Gửi Binance chỉ bấm được khi thẻ đang chữ ĐƯỢC VÀO. THEO DÕI là chưa đủ cửa.",
       "Vào cưỡng bức bỏ checklist. Vẫn không vào nếu coin đó đang có vị thế hoặc khối lượng bằng 0. Cưỡng bức vẫn vào được khi đang halt.",
       "Bấm một vị thế thì nhảy tới biểu đồ coin đó và vẽ mức vào, SL, TP1, TP2.",
-      "Khung giờ trên biểu đồ là M1, M3, M5, M15, H1, H4, D1. Đổi khung chỉ đổi hình vẽ. Logic vào lệnh vẫn dùng 5 phút, 15 phút, H1 và H4.",
+      "Đường Vùng Bò và Vùng Gấu trên biểu đồ lấy từ H1 và H4. Bấm M1, M5 hay H4 thì các đường đó không đổi. EMA và VWAP trên hình thì tính theo khung đang xem.",
       "Giờ trên biểu đồ và nhật ký là giờ Việt Nam.",
       "Ô Replay rule ở Desk chỉ chạy lại coin đang xem, tối đa 12 lệnh gần. Không phải trang Test.",
     ],

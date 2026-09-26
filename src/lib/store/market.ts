@@ -4,7 +4,7 @@ import type { MarketPack } from "@/lib/nukida/strategies";
 import { biasOf } from "@/lib/nukida/strategies";
 import { analyze, replay, replayStats } from "@/lib/nukida/engine";
 import { currentRules } from "@/lib/store/rules";
-import { detectZones, readStructure } from "@/lib/nukida/structure";
+import { readStructure } from "@/lib/nukida/structure";
 import { ema, sessionVwap } from "@/lib/nukida/indicators";
 
 export type WatchHit = {
@@ -36,6 +36,7 @@ type MarketState = {
     focus: string;
   }) => void;
   applyTickers: (tickers: Ticker[]) => void;
+  applySeries: (symbol: string, interval: string, rows: Candle[]) => void;
   rescan: (focus: string) => void;
   setLoading: (v: boolean) => void;
   setError: (e: string | null) => void;
@@ -79,11 +80,27 @@ export const useMarket = create<MarketState>((set, get) => ({
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error }),
   applyTickers: (tickers) => set((s) => ({ tickers: mergeTickers(s.tickers, tickers) })),
+  applySeries: (symbol, interval, rows) => {
+    if (!rows.length) return;
+    const prev = get();
+    const tfs = prev.books[symbol] ?? {};
+    const books = {
+      ...prev.books,
+      [symbol]: { ...tfs, [interval]: mergeSeries(tfs[interval], rows) },
+    };
+    const scored = scoreBooks(books, symbol);
+    set({ books, signals: scored.signals, watchHits: scored.watchHits });
+  },
   applySnapshot: (snap) => {
     const prev = get();
     const books = { ...prev.books };
     for (const [sym, tfs] of Object.entries(snap.books)) {
-      books[sym] = { ...(books[sym] ?? {}), ...tfs };
+      const prevTfs = books[sym] ?? {};
+      const nextTfs: Record<string, Candle[]> = { ...prevTfs };
+      for (const [iv, rows] of Object.entries(tfs)) {
+        nextTfs[iv] = mergeSeries(prevTfs[iv], rows);
+      }
+      books[sym] = nextTfs;
     }
     const tickers = mergeTickers(prev.tickers, snap.tickers);
     const scored = scoreBooks(books, snap.focus);
@@ -106,6 +123,14 @@ export const useMarket = create<MarketState>((set, get) => ({
     queueReplay(focus);
   },
 }));
+
+function mergeSeries(prev: Candle[] | undefined, next: Candle[]): Candle[] {
+  if (!prev?.length || next.length >= prev.length) return next;
+  const map = new Map<number, Candle>();
+  for (const c of prev) map.set(c.t, c);
+  for (const c of next) map.set(c.t, c);
+  return [...map.values()].sort((a, b) => a.t - b.t).slice(-288);
+}
 
 export function packOf(books: Record<string, Record<string, Candle[]>>, symbol: string): MarketPack | null {
   const tfs = books[symbol];
@@ -130,7 +155,7 @@ export function overlayOf(candles: Candle[]) {
     21,
   );
   const vw = sessionVwap(candles);
-  return { ema9: e9, ema21: e21, vwap: vw, structure: readStructure(candles), zones: detectZones(candles) };
+  return { ema9: e9, ema21: e21, vwap: vw, structure: readStructure(candles) };
 }
 
 export function currentBias(books: Record<string, Record<string, Candle[]>>, symbol: string) {

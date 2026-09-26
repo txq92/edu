@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { fetchSnapshot, fetchTickers } from "@/lib/binance/api";
+import { fetchSeries, fetchSnapshot, fetchTickers } from "@/lib/binance/api";
 import { DEFAULT_WATCH } from "@/lib/binance/constants";
 import { analyze } from "@/lib/nukida/engine";
 import { notifyFill } from "@/hooks/use-signal-alerts";
@@ -14,8 +14,14 @@ import { useSettings } from "@/lib/store/settings";
 
 const QUERY = { staleTime: 5_000, refetchOnWindowFocus: false, retry: 1 } as const;
 
+function warm(symbols: string[]) {
+  const books = useMarket.getState().books;
+  return symbols.every((s) => (books[s]?.["5m"]?.length ?? 0) >= 250);
+}
+
 export function useScanner() {
   const symbol = useSettings((s) => s.symbol);
+  const chartTf = useSettings((s) => s.chartTf);
   const watch = useSettings((s) => s.watch);
   const symbols = watch.length ? watch : [...DEFAULT_WATCH];
   const symbolsKey = symbols.join(",");
@@ -35,6 +41,20 @@ export function useScanner() {
   const setError = useMarket((s) => s.setError);
   const lastAuto = useRef<Set<string>>(new Set());
 
+  useEffect(() => {
+    const have = useMarket.getState().books[symbol]?.[chartTf]?.length ?? 0;
+    if (have >= 120) return;
+    let cancel = false;
+    void fetchSeries({ data: { symbol, interval: chartTf, limit: 288 } })
+      .then((rows) => {
+        if (!cancel && rows.length) useMarket.getState().applySeries(symbol, chartTf, rows);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancel = true;
+    };
+  }, [symbol, chartTf]);
+
   const focus = useQuery({
     queryKey: ["snapshot-focus", symbol],
     queryFn: () =>
@@ -43,10 +63,11 @@ export function useScanner() {
           symbols: [symbol],
           focus: symbol,
           intervals: ["1m", "3m", "5m", "15m", "1h", "4h", "1d"],
-          limit: 120,
+          limit: 288,
+          tails: warm([symbol]),
         },
       }),
-    refetchInterval: 8_000,
+    refetchInterval: 12_000,
     ...QUERY,
   });
 
@@ -58,10 +79,11 @@ export function useScanner() {
           symbols,
           focus: symbol,
           intervals: ["3m", "5m", "15m", "1h", "4h"],
-          limit: 120,
+          limit: 288,
+          tails: warm(symbols),
         },
       }),
-    refetchInterval: 12_000,
+    refetchInterval: 25_000,
     ...QUERY,
   });
 

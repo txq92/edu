@@ -46,6 +46,17 @@ function pointsOf(candles: Candle[], values: Array<number | null>): Point[] {
   return out;
 }
 
+function chartZones(zones: Zone[]): Zone[] {
+  const out: Zone[] = [];
+  for (const tf of ["H4", "H1"]) {
+    for (const kind of ["bull", "bear"] as const) {
+      const hit = zones.find((z) => z.kind === kind && z.label.startsWith(`${tf} `));
+      if (hit) out.push(hit);
+    }
+  }
+  return out;
+}
+
 function vnParts(time: Time) {
   if (typeof time !== "number") return null;
   const d = new Date(time * 1000);
@@ -67,6 +78,7 @@ export function PriceChart({
   tp1,
   tp2,
   resetKey,
+  zones,
 }: {
   candles: Candle[];
   signal: Signal | null;
@@ -75,6 +87,7 @@ export function PriceChart({
   tp1?: number;
   tp2?: number;
   resetKey: string;
+  zones: Zone[];
 }) {
   const host = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -215,7 +228,7 @@ export function PriceChart({
       );
     };
 
-    overlay.zones.slice(0, 2).forEach((z: Zone) => {
+    chartZones(zones).forEach((z) => {
       mark(z.kind === "bull" ? z.lo : z.hi, z.kind === "bull" ? BULL : BEAR, z.label, LineStyle.Dashed);
     });
 
@@ -243,7 +256,7 @@ export function PriceChart({
       priceScale.setAutoScale(false);
       priceScale.setVisibleRange(priceRange);
     }
-  }, [candles, signal, entry, sl, tp1, tp2, resetKey]);
+  }, [candles, signal, entry, sl, tp1, tp2, resetKey, zones]);
 
   return <div ref={host} className="h-full w-full" />;
 }
