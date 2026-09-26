@@ -22,9 +22,12 @@ const BANDS = [
 ] as const;
 const RATIOS = [1, 1.5, 2] as const;
 
+const FLAGS = [false, true] as const;
+
 type Plan = {
   key: string;
   label: string;
+  detail: string;
   rules: RuleConfig;
   trades: number;
   wins: number;
@@ -129,16 +132,36 @@ function BacktestPage() {
       }
       const found: Plan[] = [];
       let n = 0;
-      const total = BANDS.length * RATIOS.length;
+      const total = BANDS.length * RATIOS.length * FLAGS.length ** 3;
       for (const band of BANDS) {
         for (const rr of RATIOS) {
-          n += 1;
-          setProgress(`Đang so phương án ${n}/${total} · ${band.label} · R:R ${rr}`);
-          await wait();
-          const set = { ...rules, sensitivity: band.value, minRr: rr };
-          const trades = runRules(packs, set);
-          const s = summarize(trades);
-          found.push({ key: `${band.value}-${rr}`, label: `${band.label} · R:R ${rr}`, rules: set, ...s });
+          for (const htf of FLAGS) {
+            for (const tired of FLAGS) {
+              for (const funding of FLAGS) {
+                n += 1;
+                const detail = `H4/H1 ${onOff(htf)} · kiệt sức ${onOff(tired)} · funding ${onOff(funding)}`;
+                setProgress(`Đang thử ${n}/${total} · ${band.label} · R:R ${rr} · ${detail}`);
+                await wait();
+                const set: RuleConfig = {
+                  ...rules,
+                  sensitivity: band.value,
+                  minRr: rr,
+                  requireHtf: htf,
+                  blockExhausted: tired,
+                  fundingFilter: funding,
+                };
+                const trades = runRules(packs, set);
+                const s = summarize(trades);
+                found.push({
+                  key: `${band.value}-${rr}-${htf}-${tired}-${funding}`,
+                  label: `${band.label} · R:R ${rr}`,
+                  detail,
+                  rules: set,
+                  ...s,
+                });
+              }
+            }
+          }
         }
       }
       found.sort(byPlan);
@@ -147,7 +170,7 @@ function BacktestPage() {
       if (best && best.trades > 0) {
         setRules(best.rules);
         setRows(runRules(packs, best.rules).sort((a, b) => b.at - a.at));
-        setProgress(`Phương án tốt nhất: ${best.label}. Chưa gắn vào bot.`);
+        setProgress(`Phương án tốt nhất: ${best.label}. ${best.detail}. Chưa gắn vào bot.`);
       } else {
         setRows([]);
         setProgress("Không phương án nào có lệnh. Thử thêm ngày hoặc nới rule.");
@@ -303,6 +326,9 @@ function BacktestPage() {
             Gắn vào bot
           </Button>
         </div>
+        <p className="mt-3 text-xs text-faint">
+          Tìm phương án chạy 72 lần: Chặt, Vừa, Rộng × R:R 1, 1.5, 2 × bật hoặc tắt từng ô check. Điểm vào giữ số đang nhập.
+        </p>
       </section>
 
       <p className="mt-4 text-sm text-muted">{progress}</p>
@@ -313,7 +339,7 @@ function BacktestPage() {
           <table className="w-full text-left text-sm">
             <thead className="text-xs text-faint">
               <tr>
-                <th className="px-3 py-2 font-normal">Phương án</th>
+                <th className="px-3 py-2 font-normal">Phương án đã thử</th>
                 <th className="px-3 py-2 font-normal">Lệnh</th>
                 <th className="px-3 py-2 font-normal">Thắng</th>
                 <th className="px-3 py-2 font-normal">Kỳ vọng</th>
@@ -322,8 +348,11 @@ function BacktestPage() {
             </thead>
             <tbody>
               {plans.map((p, i) => (
-                <tr key={p.key} className={cn("border-t border-line", i === 0 && "text-fg")}>
-                  <td className="px-3 py-2">{i === 0 ? `${p.label} · tốt nhất` : p.label}</td>
+                <tr key={p.key} className={cn("border-t border-line align-top", i === 0 && "text-fg")}>
+                  <td className="px-3 py-2">
+                    <div>{i === 0 ? `${p.label} · tốt nhất` : p.label}</div>
+                    <div className="mt-1 text-xs text-faint">{p.detail}</div>
+                  </td>
                   <td className="px-3 py-2 font-mono">{p.trades}</td>
                   <td className="px-3 py-2 font-mono">{p.wr.toFixed(0)}%</td>
                   <td className="px-3 py-2 font-mono">{p.expectancy.toFixed(2)}R</td>
@@ -341,6 +370,8 @@ function BacktestPage() {
         <Stat label="Tỷ lệ thắng" value={`${stats.wr.toFixed(0)}%`} />
         <Stat label="Lời lỗ" value={formatUsd(stats.pnl)} tone={stats.pnl >= 0 ? "bull" : "bear"} />
       </div>
+
+      {rows.length ? <Performance rows={rows} plans={plans} /> : null}
 
       <div className="mt-4 flex flex-col gap-3">
         {rows.map((r) => (
@@ -365,6 +396,127 @@ function BacktestPage() {
       </div>
     </div>
   );
+}
+
+function onOff(on: boolean) {
+  return on ? "bật" : "tắt";
+}
+
+function Performance({ rows, plans }: { rows: BacktestTrade[]; plans: Plan[] }) {
+  const s = tradeStats(rows);
+  const bySide = buckets(rows, (r) => (r.side === "BUY" ? "Long" : "Short"));
+  const byCoin = buckets(rows, (r) => r.symbol.replace("USDT", ""));
+  const bySetup = buckets(rows, (r) => r.setupName);
+  const compares = plans.length
+    ? [
+        compare(plans, "H4/H1 bật", (p) => p.rules.requireHtf),
+        compare(plans, "H4/H1 tắt", (p) => !p.rules.requireHtf),
+        compare(plans, "Kiệt sức bật", (p) => p.rules.blockExhausted),
+        compare(plans, "Kiệt sức tắt", (p) => !p.rules.blockExhausted),
+        compare(plans, "Funding bật", (p) => p.rules.fundingFilter),
+        compare(plans, "Funding tắt", (p) => !p.rules.fundingFilter),
+        compare(plans, "Chặt", (p) => p.rules.sensitivity === 1),
+        compare(plans, "Vừa", (p) => Math.abs(p.rules.sensitivity - 1.6) < 0.05),
+        compare(plans, "Rộng", (p) => p.rules.sensitivity === 2.4),
+      ]
+    : [];
+
+  return (
+    <section className="mt-4 rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
+      <h2 className="font-display text-2xl">Hiệu suất</h2>
+      <p className="mt-2 text-sm text-muted">
+        Tính trên lệnh của phương án đang xem.
+        {rows.length < 30 ? " Mẫu dưới 30 lệnh, chênh lệch vài lệnh là đảo kết luận." : ""}
+      </p>
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Stat label="Profit factor" value={s.pf === Infinity ? "∞" : s.pf.toFixed(2)} />
+        <Stat label="TB thắng" value={`${s.avgWinR.toFixed(2)}R`} tone="bull" />
+        <Stat label="TB thua" value={`${s.avgLossR.toFixed(2)}R`} tone="bear" />
+        <Stat label="Sụt giảm sâu nhất" value={formatUsd(-s.maxDd)} tone="bear" />
+        <Stat label="Thua liên tiếp" value={String(s.maxStreak)} />
+        <Stat label="Lệnh lãi gộp" value={formatUsd(s.grossWin)} tone="bull" />
+        <Stat label="Lệnh lỗ gộp" value={formatUsd(-s.grossLoss)} tone="bear" />
+      </div>
+      <Split title="Long / Short" items={bySide} />
+      <Split title="Theo coin" items={byCoin} />
+      <Split title="Theo setup" items={bySetup} />
+      {compares.length ? (
+        <div className="mt-5">
+          <p className="text-sm">Kỳ vọng trung bình khi thử điều kiện</p>
+          <div className="mt-2 flex flex-col gap-1 text-sm">
+            {compares.map((c) => (
+              <div key={c.name} className="flex items-center justify-between gap-3">
+                <span className="text-muted">{c.name}</span>
+                <span className={cn("font-mono", c.exp >= 0 ? "text-bull" : "text-bear")}>{c.exp.toFixed(2)}R</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function Split({ title, items }: { title: string; items: Array<{ name: string } & ReturnType<typeof summarize>> }) {
+  if (!items.length) return null;
+  return (
+    <div className="mt-5">
+      <p className="text-sm">{title}</p>
+      <div className="mt-2 flex flex-col gap-1 text-sm">
+        {items.map((item) => (
+          <div key={item.name} className="flex items-center justify-between gap-3">
+            <span className="min-w-0 truncate text-muted">
+              {item.name} · {item.trades} lệnh · {item.wr.toFixed(0)}%
+            </span>
+            <span className={cn("shrink-0 font-mono", item.pnl >= 0 ? "text-bull" : "text-bear")}>{formatUsd(item.pnl)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function tradeStats(rows: BacktestTrade[]) {
+  const closed = rows.filter((r) => r.outcome !== "open");
+  const wins = closed.filter((r) => r.pnl > 0);
+  const losses = closed.filter((r) => r.pnl < 0);
+  const grossWin = wins.reduce((a, r) => a + r.pnl, 0);
+  const grossLoss = Math.abs(losses.reduce((a, r) => a + r.pnl, 0));
+  const pf = grossLoss > 0 ? grossWin / grossLoss : grossWin > 0 ? Infinity : 0;
+  const avgWinR = wins.length ? wins.reduce((a, r) => a + r.r, 0) / wins.length : 0;
+  const avgLossR = losses.length ? losses.reduce((a, r) => a + r.r, 0) / losses.length : 0;
+  let equity = 0;
+  let peak = 0;
+  let maxDd = 0;
+  let streak = 0;
+  let maxStreak = 0;
+  for (const r of [...rows].sort((a, b) => a.at - b.at)) {
+    equity += r.pnl;
+    peak = Math.max(peak, equity);
+    maxDd = Math.max(maxDd, peak - equity);
+    if (r.pnl < 0) {
+      streak += 1;
+      maxStreak = Math.max(maxStreak, streak);
+    } else if (r.pnl > 0) streak = 0;
+  }
+  return { pf, avgWinR, avgLossR, maxDd, maxStreak, grossWin, grossLoss };
+}
+
+function buckets(rows: BacktestTrade[], keyOf: (r: BacktestTrade) => string) {
+  const map = new Map<string, BacktestTrade[]>();
+  for (const row of rows) {
+    const key = keyOf(row);
+    map.set(key, [...(map.get(key) ?? []), row]);
+  }
+  return [...map.entries()]
+    .map(([name, list]) => ({ name, ...summarize(list) }))
+    .sort((a, b) => b.pnl - a.pnl);
+}
+
+function compare(plans: Plan[], name: string, pick: (p: Plan) => boolean) {
+  const list = plans.filter(pick);
+  const exp = list.length ? list.reduce((a, p) => a + p.expectancy, 0) / list.length : 0;
+  return { name, exp };
 }
 
 function summarize(rows: BacktestTrade[]) {
@@ -394,8 +546,21 @@ function downloadResults(rows: BacktestTrade[], plans: Plan[], symbols: string[]
     ["coin", symbols.map((s) => s.replace("USDT", "")).join(" ")].join(","),
     ["ngay", String(days)].join(","),
     "",
-    ["phuong_an", "lenh", "thang_pct", "ky_vong_R", "loi_lo"].join(","),
-    ...plans.map((p) => [p.label, p.trades, p.wr.toFixed(1), p.expectancy.toFixed(2), p.pnl.toFixed(2)].map(csvCell).join(",")),
+    ["phuong_an", "h4_h1", "kiet_suc", "funding", "lenh", "thang_pct", "ky_vong_R", "loi_lo"].join(","),
+    ...plans.map((p) =>
+      [
+        p.label,
+        p.rules.requireHtf ? "bat" : "tat",
+        p.rules.blockExhausted ? "bat" : "tat",
+        p.rules.fundingFilter ? "bat" : "tat",
+        p.trades,
+        p.wr.toFixed(1),
+        p.expectancy.toFixed(2),
+        p.pnl.toFixed(2),
+      ]
+        .map(csvCell)
+        .join(","),
+    ),
     "",
     ["gio", "coin", "huong", "setup", "vao", "sl", "tp1", "tp2", "ket_qua", "loi_lo", "R"].join(","),
     ...rows.map((r) =>
