@@ -42,14 +42,17 @@ export function useScanner() {
   const lastAuto = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    const have = useMarket.getState().books[symbol]?.[chartTf]?.length ?? 0;
-    if (have >= 120) return;
+    const books = useMarket.getState().books[symbol] ?? {};
+    const need = [...new Set([chartTf, "1h", "4h"])].filter((iv) => (books[iv]?.length ?? 0) < 120);
+    if (!need.length) return;
     let cancel = false;
-    void fetchSeries({ data: { symbol, interval: chartTf, limit: 288 } })
-      .then((rows) => {
-        if (!cancel && rows.length) useMarket.getState().applySeries(symbol, chartTf, rows);
-      })
-      .catch(() => undefined);
+    void Promise.all(
+      need.map((interval) =>
+        fetchSeries({ data: { symbol, interval, limit: 288 } }).then((rows) => {
+          if (!cancel && rows.length) useMarket.getState().applySeries(symbol, interval, rows);
+        }),
+      ),
+    ).catch(() => undefined);
     return () => {
       cancel = true;
     };

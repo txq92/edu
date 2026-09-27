@@ -60,7 +60,7 @@ const SECTIONS: Array<{ title: string; items: string[] }> = [
       "Giá vào phải nằm trong vùng đó. Độ nhạy Chặt, Vừa, Rộng nới biên vùng: hệ số 1, 1.6 hoặc 2.4.",
       "Nếu ô tiền SL để trống và có vùng: SL long bằng đáy vùng nhân 0,999. SL short bằng đỉnh vùng nhân 1,001. Cách mép 0,1%.",
       "Nếu đã nhập số tiền SL: khối lượng = tiền vào × đòn bẩy. Khoảng cách SL = số tiền lỗ chia khối lượng. TP được tính lại theo R:R.",
-      "TP1 = R:R đang đặt. TP2 = số lớn hơn giữa 2.5 và R:R + 1.",
+      "TP1 là mép gần của vùng đối diện trên H1 hoặc H4. Long chốt tại vùng Gấu phía trên. Short chốt tại vùng Bò phía dưới. TP2 là vùng đối diện kế tiếp. Không có vùng thì mới dùng bội số R:R.",
       "Chạm TP1 trên lệnh giấy: đóng 50%, kéo SL về giá vào. Chạm TP2 hoặc SL: đóng hết.",
     ],
   },

@@ -21,6 +21,16 @@ export function moneySl<T extends Planned>(
   const dist = opts.slUsd / qty;
   const sl = signal.side === "BUY" ? signal.entry - dist : signal.entry + dist;
   if (!(sl > 0) || !Number.isFinite(sl)) return signal;
+  const toward =
+    (signal.side === "BUY" && signal.tp1 > signal.entry) || (signal.side === "SELL" && signal.tp1 < signal.entry);
+  if (toward) {
+    return {
+      ...signal,
+      sl,
+      rr: rrOf(signal.entry, sl, signal.tp1),
+      slPct: dist / signal.entry,
+    };
+  }
   const r1 = Math.max(0.8, opts.minRr);
   const r2 = Math.max(2.5, r1 + 1);
   const next = targets(signal.entry, sl, signal.side, r1, r2);
@@ -131,6 +141,34 @@ export function targets(entry: number, sl: number, side: Side, r1 = 1.5, r2 = 2.
     return { tp1: entry + risk * r1, tp2: entry + risk * r2 };
   }
   return { tp1: entry - risk * r1, tp2: entry - risk * r2 };
+}
+
+export function zoneTargets(
+  entry: number,
+  side: Side,
+  zones: { lo: number; hi: number; kind: "bull" | "bear" }[],
+  sl: number,
+  minRr: number,
+): { tp1: number; tp2: number } {
+  const r1 = Math.max(0.8, minRr);
+  const r2 = Math.max(2.5, r1 + 1);
+  const fall = targets(entry, sl, side, r1, r2);
+  const buy = side === "BUY";
+  const levels = zones
+    .filter((z) => (buy ? z.kind === "bear" && z.lo > entry : z.kind === "bull" && z.hi < entry))
+    .flatMap((z) => (buy ? [z.lo, z.hi] : [z.hi, z.lo]))
+    .filter((p) => (buy ? p > entry * 1.0008 : p < entry * 0.9992))
+    .sort((a, b) => (buy ? a - b : b - a));
+  const uniq: number[] = [];
+  for (const p of levels) {
+    if (!uniq.some((x) => Math.abs(x - p) / entry < 0.001)) uniq.push(p);
+  }
+  if (!uniq.length) return fall;
+  const tp1 = uniq[0]!;
+  const span = Math.abs(tp1 - entry);
+  const stretched = buy ? entry + span * 1.6 : entry - span * 1.6;
+  const tp2 = uniq[1] ?? stretched;
+  return { tp1, tp2 };
 }
 
 export function rrOf(entry: number, sl: number, tp: number): number {

@@ -1,6 +1,6 @@
 import type { Candle, Side, Signal, Zone } from "./types";
 import { atr, closedOnly, lastNum } from "./indicators";
-import { targets, rrOf, zoneSl } from "./risk";
+import { rrOf, zoneSl, zoneTargets } from "./risk";
 
 export function forcedSignal(opts: {
   symbol: string;
@@ -9,15 +9,14 @@ export function forcedSignal(opts: {
   candles: Candle[];
   minRr: number;
   zone?: Zone | null;
+  zones?: Zone[];
 }): Signal {
   const closed = closedOnly(opts.candles);
   const a = lastNum(atr(closed.length ? closed : opts.candles, 14), 1) ?? opts.price * 0.003;
   const dist = Math.max(a * 1.2, opts.price * 0.0015);
   const fromZone = opts.zone ? zoneSl(opts.price, opts.zone, opts.side, 0.001) : null;
   const sl = fromZone ?? (opts.side === "BUY" ? opts.price - dist : opts.price + dist);
-  const r1 = Math.max(0.8, opts.minRr);
-  const r2 = Math.max(2.5, r1 + 1);
-  const { tp1, tp2 } = targets(opts.price, sl, opts.side, r1, r2);
+  const { tp1, tp2 } = zoneTargets(opts.price, opts.side, opts.zones ?? [], sl, opts.minRr);
   const now = Date.now();
   const buy = opts.side === "BUY";
   return {

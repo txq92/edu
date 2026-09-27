@@ -139,8 +139,8 @@ function SignalCard({ signal, others }: { signal: Signal; others: Signal[] }) {
         <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
           <Stat k="Vào" v={formatPrice(planned.entry)} />
           <Stat k="SL" v={formatPrice(planned.sl)} />
-          <Stat k="TP1 1.5R" v={formatPrice(planned.tp1)} />
-          <Stat k="TP2 2.5R" v={formatPrice(planned.tp2)} />
+          <Stat k="TP1" v={formatPrice(planned.tp1)} />
+          <Stat k="TP2" v={formatPrice(planned.tp2)} />
           <Stat k="R:R" v={planned.rr.toFixed(2)} />
           <Stat k="Size" v={`${size.qty || "—"} · ${formatUsd(size.notional, 0)}`} />
         </dl>
@@ -209,6 +209,7 @@ function ForceEntry() {
           candles: books[symbol]?.["5m"] ?? [],
           minRr,
           zone,
+          zones: pack ? frameZones(pack) : [],
         })
       : null;
   const plan = raw

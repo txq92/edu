@@ -1,30 +1,55 @@
 import type { ChecklistItem, Side, Signal } from "./types";
 import type { MarketPack } from "./strategies";
-import { biasOf, frameZones, higherTrend, zoneHit } from "./strategies";
+import { frameZones, higherTrend, zoneHit } from "./strategies";
 import { closedOnly, nearFunding } from "./indicators";
 import { exhaustedMove, readStructure } from "./structure";
 import { DEFAULT_RULES, type RuleConfig } from "./rules";
 
+function trendWord(trend: "up" | "down" | "side") {
+  if (trend === "up") return "tăng";
+  if (trend === "down") return "giảm";
+  return "đi ngang";
+}
+
+function higherLine(side: Side, trend: "up" | "down" | "side") {
+  const buy = side === "BUY";
+  const aligned = buy ? trend === "up" : trend === "down";
+  const order = buy ? "mua" : "bán";
+  const word = trendWord(trend);
+  const note =
+    trend === "side"
+      ? "Khung lớn H4/H1 đi ngang — đứng ngoài."
+      : !aligned && buy
+        ? "Khung lớn H4/H1 đang giảm — không mua."
+        : !aligned
+          ? "Khung lớn H4/H1 đang tăng — không bán."
+          : `H4/H1 đang ${word}, cùng chiều lệnh ${order}.`;
+  return {
+    aligned,
+    label: `Cần H4/H1 cùng chiều lệnh ${order}. Đang ${word}`,
+    note,
+  };
+}
+
 export function buildChecklist(signal: Signal, pack: MarketPack, rules: RuleConfig = DEFAULT_RULES): ChecklistItem[] {
   const side = signal.side;
   const buy = side === "BUY";
-  const bias = biasOf(pack);
   const tf15 = closedOnly(pack.tf15);
   const htf = readStructure(closedOnly(pack.tfH4.length ? pack.tfH4 : pack.tfH1));
   const tired = exhaustedMove(tf15, side);
   const funding = rules.fundingFilter && nearFunding(pack.now ?? Date.now(), rules.fundingWindowMin);
   const hit = zoneHit(pack, side, signal.entry, rules.sensitivity);
   const trend = higherTrend(pack);
-  const aligned = buy ? trend === "up" : trend === "down";
+  const higher = higherLine(side, trend);
 
   const items: ChecklistItem[] = [
     {
       id: "a1",
       group: "A",
       required: true,
-      label: buy ? "Khung lớn H4/H1 đang tăng, cùng chiều lệnh mua" : "Khung lớn H4/H1 đang giảm, cùng chiều lệnh bán",
-      pass: !rules.requireHtf || aligned,
-      note: bias.note,
+      label: higher.label,
+      pass: !rules.requireHtf || higher.aligned,
+      note: higher.note,
     },
     {
       id: "a2",
@@ -37,9 +62,9 @@ export function buildChecklist(signal: Signal, pack: MarketPack, rules: RuleConf
       id: "a3",
       group: "A",
       required: true,
-      label: buy ? "Không có cấu trúc giảm rõ trên khung lớn" : "Không có cấu trúc tăng rõ trên khung lớn",
-      pass: !rules.requireHtf || aligned,
-      note: `H4/H1: ${trend}`,
+      label: "Cấu trúc H4/H1 không được ngược lệnh",
+      pass: !rules.requireHtf || higher.aligned,
+      note: higher.note,
     },
     {
       id: "b1",
@@ -168,22 +193,21 @@ export function buildChecklist(signal: Signal, pack: MarketPack, rules: RuleConf
 
 export function idleChecklist(pack: MarketPack, side: Side, rules: RuleConfig = DEFAULT_RULES): ChecklistItem[] {
   const buy = side === "BUY";
-  const bias = biasOf(pack);
   const tf15 = closedOnly(pack.tf15);
   const htf = readStructure(closedOnly(pack.tfH4.length ? pack.tfH4 : pack.tfH1));
   const tired = exhaustedMove(tf15, side);
   const funding = rules.fundingFilter && nearFunding(pack.now ?? Date.now(), rules.fundingWindowMin);
   const trend = higherTrend(pack);
-  const aligned = buy ? trend === "up" : trend === "down";
+  const higher = higherLine(side, trend);
 
   const items: ChecklistItem[] = [
     {
       id: "a1",
       group: "A",
       required: true,
-      label: buy ? "Khung lớn H4/H1 đang tăng, cùng chiều lệnh mua" : "Khung lớn H4/H1 đang giảm, cùng chiều lệnh bán",
-      pass: !rules.requireHtf || aligned,
-      note: bias.note,
+      label: higher.label,
+      pass: !rules.requireHtf || higher.aligned,
+      note: higher.note,
     },
     {
       id: "a2",
@@ -196,9 +220,9 @@ export function idleChecklist(pack: MarketPack, side: Side, rules: RuleConfig = 
       id: "a3",
       group: "A",
       required: true,
-      label: buy ? "Không có cấu trúc giảm rõ trên khung lớn" : "Không có cấu trúc tăng rõ trên khung lớn",
-      pass: !rules.requireHtf || aligned,
-      note: `H4/H1: ${trend}`,
+      label: "Cấu trúc H4/H1 không được ngược lệnh",
+      pass: !rules.requireHtf || higher.aligned,
+      note: higher.note,
     },
     {
       id: "b1",

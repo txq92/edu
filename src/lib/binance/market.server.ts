@@ -360,6 +360,7 @@ export async function getSnapshot(opts: {
     for (const tfs of Object.values(books)) {
       for (const iv of Object.keys(tfs)) {
         const rows = tfs[iv];
+        if (iv === "1h" || iv === "4h" || iv === "1d") continue;
         if (rows && rows.length > 8) tfs[iv] = rows.slice(-8);
       }
     }
