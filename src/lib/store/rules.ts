@@ -16,7 +16,17 @@ export const useRules = create<RulesState>()(
       reset: () => set({ ...DEFAULT_RULES }),
       useTest: () => set({ ...TEST_RULES }),
     }),
-    { name: "nukida-rules", skipHydration: true },
+    {
+      name: "nukida-rules",
+      skipHydration: true,
+      version: 2,
+      migrate: (persisted, version) => {
+        if (version < 2 && persisted && typeof persisted === "object") {
+          return { ...(persisted as RuleConfig), minRr: 1, requireHtf: false };
+        }
+        return persisted as RuleConfig;
+      },
+    },
   ),
 );
 

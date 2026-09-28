@@ -1,11 +1,12 @@
 import { create } from "zustand";
 import type { Candle, ReplayResult, Signal, Ticker } from "@/lib/nukida/types";
-import type { MarketPack } from "@/lib/nukida/strategies";
-import { biasOf } from "@/lib/nukida/strategies";
+import { biasOf, higherTrend, zoneHit, type MarketPack } from "@/lib/nukida/strategies";
+import { closedOnly, ema, sessionVwap } from "@/lib/nukida/indicators";
 import { analyze, replay, replayStats } from "@/lib/nukida/engine";
 import { currentRules } from "@/lib/store/rules";
 import { readStructure } from "@/lib/nukida/structure";
-import { ema, sessionVwap } from "@/lib/nukida/indicators";
+
+export type ScanPhase = "nen" | "trong" | "cho" | "ngoai";
 
 export type WatchHit = {
   symbol: string;
@@ -13,6 +14,12 @@ export type WatchHit = {
   side: Signal["side"];
   setupName: string;
   requiredPass: boolean;
+  phase: ScanPhase;
+  trend: "up" | "down" | "side";
+  entry: number;
+  sl: number;
+  rr: number;
+  at: number;
 };
 
 type MarketState = {
@@ -46,21 +53,30 @@ function scoreBooks(books: Record<string, Record<string, Candle[]>>, focus: stri
   const rules = currentRules();
   const pack = packOf(books, focus);
   const signals = pack ? analyze(pack, rules) : [];
-  const floor = Math.min(55, rules.minQuality);
   const watchHits: WatchHit[] = [];
   for (const [symbol, tfs] of Object.entries(books)) {
     const p = packOf({ [symbol]: tfs }, symbol);
     if (!p) continue;
     const best = analyze(p, rules)[0];
-    if (best && best.quality >= floor) {
-      watchHits.push({
-        symbol,
-        quality: best.quality,
-        side: best.side,
-        setupName: best.setupName,
-        requiredPass: best.requiredPass,
-      });
-    }
+    const trend = higherTrend(p);
+    const last = closedOnly(p.tf5).at(-1);
+    const price = last?.c ?? 0;
+    const side = best?.side ?? (trend === "down" ? "SELL" : "BUY");
+    const inZone = price > 0 && Boolean(zoneHit(p, side, price, rules.sensitivity));
+    const phase: ScanPhase = best?.requiredPass ? "nen" : inZone ? "trong" : trend === "side" ? "ngoai" : "cho";
+    watchHits.push({
+      symbol,
+      quality: best?.quality ?? 0,
+      side,
+      setupName: best?.setupName ?? "",
+      requiredPass: Boolean(best?.requiredPass),
+      phase,
+      trend,
+      entry: best?.entry ?? 0,
+      sl: best?.sl ?? 0,
+      rr: best?.rr ?? 0,
+      at: best?.barTime ?? last?.t ?? 0,
+    });
   }
   return { signals, watchHits };
 }

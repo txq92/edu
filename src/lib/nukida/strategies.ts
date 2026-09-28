@@ -81,9 +81,7 @@ export function frameZones(pack: MarketPack): Zone[] {
 }
 
 export function zoneHit(pack: MarketPack, side: Side, price: number, sensitivity: number): Zone | null {
-  const trend = htfAllows(pack, side).trend;
-  const aligned = side === "BUY" ? trend === "up" : trend === "down";
-  if (!aligned) return null;
+  if (!htfAllows(pack, side).ok) return null;
   const kind = side === "BUY" ? "bull" : "bear";
   const pad = 0.0015 * sensitivity;
   return frameZones(pack).find((z) => z.kind === kind && inZone(price, z, pad)) ?? null;
@@ -266,8 +264,9 @@ function toSignal(pack: MarketPack, raw: RawSetup, rules: RuleConfig, qualityBoo
   const funding = nearFunding(pack.now ?? Date.now(), rules.fundingWindowMin);
 
   const rejects = [...raw.rejects];
-  if (rules.requireHtf && allow.trend !== (raw.side === "BUY" ? "up" : "down")) {
-    rejects.push(allow.trend === "side" ? "Khung lớn H4/H1 chưa có hướng — đứng ngoài." : allow.note);
+  if (!allow.ok) rejects.push(allow.note);
+  if (rules.requireHtf && allow.trend === "side") {
+    rejects.push("Khung lớn H4/H1 đi ngang — đang bật bắt buộc cùng hướng.");
   }
   if (!hit) rejects.push("5m chưa về vùng Bò/Gấu của H1 hoặc H4 cùng chiều khung lớn.");
   if (rules.blockExhausted && tired) rejects.push("Sóng kéo dài, kiệt sức trên khung 15m.");

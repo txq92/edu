@@ -131,7 +131,7 @@ function RulesPage() {
 
         <div className="mt-5 flex flex-col gap-3">
           <Toggle
-            label="Bắt buộc H4/H1 cùng hướng"
+            label="Bắt buộc cùng hướng cả khi H4/H1 đi ngang"
             checked={rules.requireHtf}
             onChange={(v) => rules.patch({ requireHtf: v })}
           />

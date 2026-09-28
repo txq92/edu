@@ -47,7 +47,7 @@ export const useSettings = create<Settings>()(
       slUsd: 0,
       sizeBy: "margin",
       userView: "BUY",
-      minRr: 1.5,
+      minRr: 1,
       maxLeverage: 10,
       autoPaper: false,
       autoLive: false,

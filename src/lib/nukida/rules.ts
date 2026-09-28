@@ -11,11 +11,11 @@ export type RuleConfig = {
 };
 
 export const DEFAULT_RULES: RuleConfig = {
-  minRr: 1.5,
+  minRr: 1,
   minQuality: 70,
   fundingFilter: true,
   fundingWindowMin: 15,
-  requireHtf: true,
+  requireHtf: false,
   blockExhausted: true,
   autoAllWatch: false,
   sensitivity: 1,

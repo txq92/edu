@@ -2,7 +2,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { geoBlocked, placeLive } from "@/lib/binance/live";
-import { formatPrice, formatUsd } from "@/lib/nukida/format";
+import { formatPrice, formatTime, formatUsd } from "@/lib/nukida/format";
 import { notifyFill } from "@/hooks/use-signal-alerts";
 import { forcedSignal } from "@/lib/nukida/force";
 import { frameZones } from "@/lib/nukida/strategies";
@@ -126,6 +126,7 @@ function SignalCard({ signal, others }: { signal: Signal; others: Signal[] }) {
             <h2 className="font-display text-2xl">
               {signal.symbol.replace("USDT", "")} · {signal.setupName}
             </h2>
+            <p className="mt-1 text-xs text-faint">Nến 5m {formatTime(signal.barTime)}</p>
           </div>
           <Badge tone={signal.requiredPass ? (buy ? "bull" : "bear") : "warn"}>
             {signal.requiredPass ? "ĐƯỢC VÀO" : "THEO DÕI"}

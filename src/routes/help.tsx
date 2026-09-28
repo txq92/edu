@@ -71,14 +71,14 @@ const SECTIONS: Array<{ title: string; items: string[] }> = [
       "EMA: trên 15 phút, EMA 9 nằm đúng phía EMA 21, giá đóng cùng phía, độ dốc EMA 21 đủ. Độ nhạy không phải Rộng thì bỏ nếu EMA vừa cắt nhau trong 8 nến. Nến 5 phút chạm EMA 21 và đảo chiều, không đóng quá sâu qua EMA. Tên: Pullback EMA 9/21 mua hoặc bán.",
       "VWAP: VWAP tính trên nến 5 phút của phiên. Nến 15 phút và nến 5 phút cùng ở trên VWAP thì xét mua, cùng ở dưới thì xét bán. Nến 5 phút chạm VWAP và đảo chiều, không đóng qua VWAP. Nếu đang bật né funding và đang trong cửa sổ funding thì kiểu này không tạo ứng viên. Tên: Hồi VWAP — long hoặc short.",
       "Hai hoặc ba kiểu cùng một chiều thì gộp thành một tín hiệu, cộng điểm.",
-      "Cả ba kiểu vẫn bị bỏ nếu giá 5 phút chưa nằm trong vùng H1 hoặc H4 cùng chiều.",
+      "Cả ba kiểu vẫn bị bỏ nếu giá 5 phút chưa nằm trong vùng H1 hoặc H4 cùng chiều lệnh, hoặc khung lớn đang ngược chiều.",
     ],
   },
   {
     title: "Cửa chặn trước khi ĐƯỢC VÀO",
     items: [
-      "Không chạm vùng H1/H4 cùng chiều: luôn từ chối. Tắt ô H4/H1 không bỏ cửa này.",
-      "Ô Bắt buộc H4/H1 cùng hướng: thêm một dòng từ chối khi hướng khung lớn không đúng chiều lệnh, kể cả khi khung lớn đi ngang.",
+      "Ngược chiều H4/H1 luôn từ chối. Đi ngang vẫn được vào.",
+      "Ô Bắt buộc cùng hướng cả khi đi ngang: bật thêm thì khung lớn đi ngang cũng bị từ chối. Tắt thì chỉ chặn ngược chiều.",
       "Ô Chặn sóng kiệt sức: từ chối nếu sóng 15 phút bị đánh dấu kiệt sức.",
       "R:R thấp hơn số đang đặt: từ chối.",
       "Ô Né giờ funding: từ chối khi gần giờ funding. Cửa sổ mặc định 15 phút, chỉnh được trên trang Rule.",
@@ -89,7 +89,7 @@ const SECTIONS: Array<{ title: string; items: string[] }> = [
   {
     title: "Rule",
     items: [
-      "Rule gốc: R:R 1.5, điểm 70, né funding 15 phút, bắt buộc cùng hướng H4/H1, chặn sóng kiệt, độ nhạy Chặt.",
+      "Rule gốc: R:R 1, điểm 70, né funding 15 phút, đi ngang vẫn được vào, chỉ chặn ngược chiều H4/H1, chặn sóng kiệt, độ nhạy Chặt.",
       "Dễ test: R:R 1, điểm 45, tắt funding, tắt bắt buộc hướng, tắt chặn kiệt, độ nhạy Rộng.",
       "Chặt, Vừa, Rộng là hệ số 1, 1.6, 2.4 cho khoảng chạm EMA, VWAP, mép hộp và biên vùng.",
       "Auto paper trên Desk dùng đúng bộ đang lưu ở trang này.",

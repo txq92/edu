@@ -293,7 +293,7 @@ function BacktestPage() {
         </div>
 
         <div className="mt-4 flex flex-col gap-2 text-sm">
-          <Check label="Bắt buộc H4/H1 cùng hướng" checked={rules.requireHtf} onChange={(v) => patch({ requireHtf: v })} />
+          <Check label="Bắt buộc cùng hướng cả khi đi ngang" checked={rules.requireHtf} onChange={(v) => patch({ requireHtf: v })} />
           <Check label="Chặn sóng kiệt sức" checked={rules.blockExhausted} onChange={(v) => patch({ blockExhausted: v })} />
           <Check label="Né giờ funding" checked={rules.fundingFilter} onChange={(v) => patch({ fundingFilter: v })} />
         </div>

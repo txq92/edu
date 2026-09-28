@@ -14,19 +14,21 @@ function trendWord(trend: "up" | "down" | "side") {
 function higherLine(side: Side, trend: "up" | "down" | "side") {
   const buy = side === "BUY";
   const aligned = buy ? trend === "up" : trend === "down";
+  const opposed = buy ? trend === "down" : trend === "up";
   const order = buy ? "mua" : "bán";
   const word = trendWord(trend);
   const note =
     trend === "side"
-      ? "Khung lớn H4/H1 đi ngang — đứng ngoài."
-      : !aligned && buy
+      ? "Khung lớn H4/H1 đi ngang — vẫn được vào."
+      : opposed && buy
         ? "Khung lớn H4/H1 đang giảm — không mua."
-        : !aligned
+        : opposed
           ? "Khung lớn H4/H1 đang tăng — không bán."
           : `H4/H1 đang ${word}, cùng chiều lệnh ${order}.`;
   return {
     aligned,
-    label: `Cần H4/H1 cùng chiều lệnh ${order}. Đang ${word}`,
+    opposed,
+    label: `H4/H1 đang ${word}. Chỉ chặn khi ngược chiều lệnh ${order}`,
     note,
   };
 }
@@ -63,7 +65,7 @@ export function buildChecklist(signal: Signal, pack: MarketPack, rules: RuleConf
       group: "A",
       required: true,
       label: "Cấu trúc H4/H1 không được ngược lệnh",
-      pass: !rules.requireHtf || higher.aligned,
+      pass: !higher.opposed,
       note: higher.note,
     },
     {
@@ -221,7 +223,7 @@ export function idleChecklist(pack: MarketPack, side: Side, rules: RuleConfig = 
       group: "A",
       required: true,
       label: "Cấu trúc H4/H1 không được ngược lệnh",
-      pass: !rules.requireHtf || higher.aligned,
+      pass: !higher.opposed,
       note: higher.note,
     },
     {

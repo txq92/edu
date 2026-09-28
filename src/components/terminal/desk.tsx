@@ -101,7 +101,7 @@ export function Desk() {
 
       <div className="grid gap-4 lg:grid-cols-[16rem_minmax(0,1fr)_20rem]">
         <aside className="rounded-xl bg-surface p-3 shadow-[var(--shadow-border)]">
-          <p className="mb-2 px-1 text-xs tracking-wide text-muted uppercase">Watchlist</p>
+          <p className="mb-2 px-1 text-xs tracking-wide text-muted uppercase">Rổ quét</p>
           <Watchlist />
           {replaySummary ? (
             <div className="mt-4 rounded-md bg-raised p-3 text-xs text-muted">
