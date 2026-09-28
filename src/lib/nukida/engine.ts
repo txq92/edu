@@ -116,7 +116,7 @@ export type BacktestTrade = {
   tp1: number;
   tp2: number;
   at: number;
-  outcome: "sl" | "tp1" | "tp2" | "open";
+  outcome: "sl" | "tp1" | "tp2" | "time" | "open";
   pnl: number;
   r: number;
 };
@@ -219,5 +219,6 @@ function settle(signal: Signal, future: Candle[], qty: number, riskUsd: number):
   }
   const last = future[future.length - 1];
   if (last && remain > 0) pnl += (last.c - signal.entry) * dir * remain;
-  return { outcome: tookTp1 ? "tp1" : "open", pnl, r: riskUsd > 0 ? pnl / riskUsd : 0 };
+  if (tookTp1) return { outcome: "tp1", pnl, r: riskUsd > 0 ? pnl / riskUsd : 0 };
+  return { outcome: "time", pnl, r: riskUsd > 0 ? pnl / riskUsd : 0 };
 }

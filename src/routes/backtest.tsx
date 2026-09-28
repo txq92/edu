@@ -598,6 +598,7 @@ function labelOf(outcome: BacktestTrade["outcome"]) {
   if (outcome === "sl") return "SL";
   if (outcome === "tp1") return "TP1";
   if (outcome === "tp2") return "TP2";
+  if (outcome === "time") return "Đóng 24g";
   return "Chưa đóng";
 }
 
