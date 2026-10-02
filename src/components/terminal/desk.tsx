@@ -2,7 +2,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useScanner } from "@/hooks/use-scanner";
 import { CHART_INTERVALS, INTERVAL_LABEL } from "@/lib/binance/constants";
 import { moneySl } from "@/lib/nukida/risk";
 import { useRules } from "@/lib/store/rules";
@@ -19,7 +18,6 @@ import { cn } from "@/lib/utils";
 import { useEffect, useMemo } from "react";
 
 export function Desk() {
-  useScanner();
   const symbol = useSettings((s) => s.symbol);
   const chartTf = useSettings((s) => s.chartTf);
   const setChartTf = useSettings((s) => s.setChartTf);

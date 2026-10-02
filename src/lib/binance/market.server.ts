@@ -345,9 +345,15 @@ export async function getSnapshot(opts: {
   const [tickers, focusBooks, , filters] = await Promise.all([
     getTickers(opts.symbols),
     Promise.all(opts.intervals.map((iv) => getKlines(opts.focus, iv, limit).then((c) => [iv, c] as const))),
-    mapPool(others, 12, async (s) => {
-      const [tf5, tf15] = await Promise.all([getKlines(s, "5m", limit), getKlines(s, "15m", limit)]);
-      watchBooks.push([s, { "5m": tf5, "15m": tf15 }] as const);
+    mapPool(others, 8, async (s) => {
+      const tail = Boolean(opts.tails);
+      const [tf5, tf15, tfH1, tfH4] = await Promise.all([
+        getKlines(s, "5m", tail ? 12 : limit),
+        getKlines(s, "15m", tail ? 8 : limit),
+        getKlines(s, "1h", tail ? 4 : limit),
+        getKlines(s, "4h", tail ? 3 : limit),
+      ]);
+      watchBooks.push([s, { "5m": tf5, "15m": tf15, "1h": tfH1, "4h": tfH4 }] as const);
     }),
     getFilters(opts.focus),
   ]);

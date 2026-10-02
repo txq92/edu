@@ -327,6 +327,9 @@ function BacktestPage() {
           </Button>
         </div>
         <p className="mt-3 text-xs text-faint">
+          Test đọc lại nến đã đóng trong khoảng ngày. Auto chỉ vào khi trình duyệt đang mở, đã bật Auto paper, và nến 5 phút vừa đóng đủ điều kiện. Lệnh trong test không tự mở trên Desk.
+        </p>
+        <p className="mt-2 text-xs text-faint">
           Tìm phương án chạy 72 lần: Chặt, Vừa, Rộng × R:R 1, 1.5, 2 × bật hoặc tắt từng ô check. Điểm vào giữ số đang nhập.
         </p>
       </section>

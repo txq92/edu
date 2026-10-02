@@ -31,7 +31,7 @@ const SECTIONS: Array<{ title: string; items: string[] }> = [
     title: "Desk",
     items: [
       "Góc phải hiện PAPER hoặc LIVE, vốn giấy, và công tắc Auto paper.",
-      "Auto paper bật thì mọi coin trên watchlist đang chữ Setup được vào lệnh giấy. Mỗi coin chỉ một vị thế. Không vào khi đang halt.",
+      "Auto paper bật thì mọi coin trên watchlist đang chữ Setup hoặc Nên làm được vào lệnh giấy. Mỗi coin chỉ một vị thế. Không vào khi đang halt. Phải để app mở trên trình duyệt; đóng tab thì không vào lệnh.",
       "Nút Vào lệnh giấy và Gửi Binance chỉ bấm được khi thẻ đang chữ ĐƯỢC VÀO. THEO DÕI là chưa đủ cửa.",
       "Vào cưỡng bức bỏ checklist. Vẫn không vào nếu coin đó đang có vị thế hoặc khối lượng bằng 0. Cưỡng bức vẫn vào được khi đang halt.",
       "Bấm một vị thế thì nhảy tới biểu đồ coin đó và vẽ mức vào, SL, TP1, TP2.",
@@ -71,7 +71,7 @@ const SECTIONS: Array<{ title: string; items: string[] }> = [
       "EMA: trên 15 phút, EMA 9 nằm đúng phía EMA 21, giá đóng cùng phía, độ dốc EMA 21 đủ. Độ nhạy không phải Rộng thì bỏ nếu EMA vừa cắt nhau trong 8 nến. Nến 5 phút chạm EMA 21 và đảo chiều, không đóng quá sâu qua EMA. Tên: Pullback EMA 9/21 mua hoặc bán.",
       "VWAP: VWAP tính trên nến 5 phút của phiên. Nến 15 phút và nến 5 phút cùng ở trên VWAP thì xét mua, cùng ở dưới thì xét bán. Nến 5 phút chạm VWAP và đảo chiều, không đóng qua VWAP. Nếu đang bật né funding và đang trong cửa sổ funding thì kiểu này không tạo ứng viên. Tên: Hồi VWAP — long hoặc short.",
       "Hai hoặc ba kiểu cùng một chiều thì gộp thành một tín hiệu, cộng điểm.",
-      "Cả ba kiểu vẫn bị bỏ nếu giá 5 phút chưa nằm trong vùng H1 hoặc H4 cùng chiều lệnh, hoặc khung lớn đang ngược chiều.",
+      "Cửa vào chính: giá 5 phút nằm trong vùng Bò hoặc Gấu H1/H4, khung lớn không ngược chiều, và nến 5 phút đảo chiều. EMA, VWAP, Breakout chỉ là xác nhận, không phải chỗ phải đứng thêm.",
     ],
   },
   {

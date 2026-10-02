@@ -1,6 +1,6 @@
 export type Side = "BUY" | "SELL";
 export type Trend = "up" | "down" | "side";
-export type StrategyId = "breakout" | "ema" | "vwap" | "confluence" | "force";
+export type StrategyId = "breakout" | "ema" | "vwap" | "confluence" | "zone" | "force";
 export type TradeMode = "paper" | "live";
 
 export type Candle = {

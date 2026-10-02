@@ -305,8 +305,42 @@ function toSignal(pack: MarketPack, raw: RawSetup, rules: RuleConfig, qualityBoo
   };
 }
 
+export function scanHtfZone(pack: MarketPack, rules: RuleConfig = DEFAULT_RULES): RawSetup | null {
+  const last5 = lastClosed(pack.tf5);
+  const prev5 = prevClosed(pack.tf5);
+  if (!last5) return null;
+  const trend = higherTrend(pack);
+  const order: Side[] = trend === "down" ? ["SELL", "BUY"] : ["BUY", "SELL"];
+  for (const side of order) {
+    const hit = zoneHit(pack, side, last5.c, rules.sensitivity);
+    if (!hit) continue;
+    if (!reversal(side, last5, prev5)) continue;
+    const tags: string[] = [];
+    if (scanEmaPullback(pack, rules)?.side === side) tags.push("EMA");
+    if (scanVwap(pack, rules)?.side === side) tags.push("VWAP");
+    if (scanBreakout(pack, rules)?.side === side) tags.push("Breakout");
+    const name = tags.length ? `Hồi ${hit.label} + ${tags.join(" + ")}` : `Hồi ${hit.label}`;
+    return {
+      side,
+      strategy: tags.length >= 2 ? "confluence" : "zone",
+      setupName: name,
+      entry: last5.c,
+      slRaw: side === "BUY" ? Math.min(last5.l, hit.lo) : Math.max(last5.h, hit.hi),
+      zone: hit,
+      reasons: [
+        `Giá 5m đang tại ${hit.label}`,
+        trend === "side" ? "H4/H1 đi ngang, không ngược chiều" : `H4/H1 ${trend === "up" ? "tăng" : "giảm"}, cùng chiều`,
+        "Nến 5m đảo chiều giữ vùng",
+        ...tags.map((t) => `Xác nhận ${t}`),
+      ],
+      rejects: [],
+    };
+  }
+  return null;
+}
+
 export function scanSetups(pack: MarketPack, rules: RuleConfig = DEFAULT_RULES): Signal[] {
-  const raws = [scanBreakout(pack, rules), scanEmaPullback(pack, rules), scanVwap(pack, rules)].filter(
+  const raws = [scanHtfZone(pack, rules), scanBreakout(pack, rules), scanEmaPullback(pack, rules), scanVwap(pack, rules)].filter(
     (x): x is RawSetup => Boolean(x),
   );
   if (!raws.length) return [];

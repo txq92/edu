@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { BookOpen, CircleHelp, FlaskConical, LayoutGrid, ScrollText, Settings } from "lucide-react";
 import type { ReactNode } from "react";
+import { useScanner } from "@/hooks/use-scanner";
 import { useSignalAlerts } from "@/hooks/use-signal-alerts";
 import { formatPrice } from "@/lib/nukida/format";
 import { useAlerts } from "@/lib/store/alerts";
@@ -15,6 +16,7 @@ const NAV = [
 ] as const;
 
 export function Shell({ children }: { children: ReactNode }) {
+  useScanner();
   useSignalAlerts();
   const alert = useAlerts((s) => s.current);
   const dismiss = useAlerts((s) => s.dismiss);
